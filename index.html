@@ -113,6 +113,7 @@
                 <div class="row-form">
                     <input type="number" id="modalPrice" min="0" step="0.01" placeholder="價格">
                     <input type="number" id="modalQty" min="1" step="1" placeholder="數量">
+                    <select id="modalUnit"><option value="g">g</option><option value="ml">ml</option><option value="pcs">pcs</option></select>
                     <select id="modalPlace">
                         <option value="Tesco">Tesco</option>
                         <option value="Lidl">Lidl</option>
@@ -342,6 +343,7 @@
       modalPrice.value = '';
       modalQty.value = '';
       modalPlace.value = 'Tesco';
+      modalUnit.value = (item.unit || 'g');
       renderRecords(item.records || []);
       modalBg.classList.add('active');
     }
@@ -386,6 +388,7 @@
       const newRecord = {
         price: modalPrice.value,
         qty: modalQty.value,
+        unit: modalUnit.value,
         place: modalPlace.value,
         date: dateStr
       };
@@ -420,9 +423,9 @@
         info.className = 'record-info';
         let unitPrice = '-';
         if (rec.price && rec.qty && !isNaN(rec.price) && !isNaN(rec.qty) && Number(rec.qty) !== 0) {
-          unitPrice = (Number(rec.price) / Number(rec.qty)).toFixed(3);
+          unitPrice = ((Number(rec.price) / Number(rec.qty)) * 1000).toFixed(1);
         }
-        info.textContent = `£ ${rec.price || '-'} for ${rec.qty || '-'} (${unitPrice}) ||  ${rec.place || '-'} ||  ${rec.date || '-'}`;
+        info.textContent = `£ ${rec.price || '-'} for ${rec.qty || '-'}${rec.unit ? rec.unit : ''} (${unitPrice}) ||  ${rec.place || '-'} ||  ${rec.date || '-'}`;
         const delBtn = document.createElement('button');
         delBtn.className = 'record-x';
         delBtn.textContent = '✕';
