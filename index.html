@@ -75,6 +75,12 @@
             .tag-btn { font-size: 1em; padding: 0.3em 1em; }
         }
     </style>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <!-- Firebase Auth -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Database -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="container" style="position:relative;">
@@ -165,22 +171,55 @@
         settingsModalBg.onclick = function(e) {
             if (e.target === settingsModalBg) settingsModalBg.style.display = 'none';
         };
-        clearDataBtn.onclick = function() {
+        clearDataBtn.onclick = async function() {
             if (confirm('確定要清除所有資料嗎？此動作無法復原。')) {
-                localStorage.removeItem('toBuyList');
+                await saveItems([]);
                 settingsModalBg.style.display = 'none';
-                render();
+                await render();
             }
         };
 
-        function getItems() {
-            return JSON.parse(localStorage.getItem('toBuyList') || '[]');
+        // Firebase config
+        const firebaseConfig = {
+          apiKey: "AIzaSyAX0SfHvlelWWdg7Q-8WHzmWNdKE2vtI3w",
+          authDomain: "to-buy-list-2323b.firebaseapp.com",
+          projectId: "to-buy-list-2323b",
+          storageBucket: "to-buy-list-2323b.appspot.com",
+          messagingSenderId: "363437967200",
+          appId: "1:363437967200:web:798c997017e75d2a278005"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let user = null;
+        let DB_PATH = null;
+
+        // 匿名登入
+        firebase.auth().onAuthStateChanged(async function(u) {
+            if (u) {
+                user = u;
+                DB_PATH = 'toBuyList/' + user.uid;
+                await render();
+                // 實時監聽
+                db.ref(DB_PATH).on('value', function() { render(); });
+            } else {
+                await firebase.auth().signInAnonymously();
+            }
+        });
+
+        // 取得資料（回傳 Promise<Array>）
+        async function getItems() {
+            if (!DB_PATH) return [];
+            const snapshot = await db.ref(DB_PATH).get();
+            return snapshot.val() || [];
         }
-        function saveItems(items) {
-            localStorage.setItem('toBuyList', JSON.stringify(items));
+        // 寫入資料（回傳 Promise）
+        async function saveItems(items) {
+            if (!DB_PATH) return;
+            await db.ref(DB_PATH).set(items);
         }
-        function render() {
-            let items = getItems();
+
+        async function render() {
+            let items = await getItems();
             // 排序：未勾選在前，已勾選在後
             items = items.map((item, idx) => ({...item, _idx: idx}));
             items.sort((a, b) => {
