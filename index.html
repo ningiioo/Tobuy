@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Buy List</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
+        .container { max-width: 480px; margin: 40px auto; background: #fff; padding: 2rem 1.5rem; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+        h1 { text-align: center; font-weight: 600; margin-bottom: 1.5rem; letter-spacing: 1px; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { display: flex; align-items: center; padding: 0.7rem 0; border-bottom: 1px solid #f0f0f0; }
+        li:last-child { border-bottom: none; }
+        .item-checkbox { margin-right: 0.8em; width: 1.1em; height: 1.1em; accent-color: #007bff; }
+        .item-name { flex: 1; cursor: pointer; transition: color 0.2s; }
+        .item-name:hover { color: #007bff; text-decoration: underline; }
+        .item-checked { color: #bbb !important; text-decoration: line-through; }
+        .item-tags { margin-left: 0.5em; display: flex; flex-wrap: wrap; gap: 0.3em; }
+        .tag { background: #e3e6ea; color: #444; border-radius: 16px; font-size: 0.85em; padding: 0.1em 0.9em; margin: 0 0.1em; }
+        .tag-btn {
+            border: none; outline: none; background: #e3e6ea; color: #444; border-radius: 16px; font-size: 0.8em; padding: 0.15em 0.55em; margin: 0.1em 0.2em 0.1em 0; cursor: pointer; transition: background 0.18s, color 0.18s;
+        }
+        .tag-btn.selected, .tag-btn:active { background: #007bff; color: #fff; }
+        .tag-btn:hover { background: #b3d1fa; color: #222; }
+        form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+        input[type="text"] { flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        button { padding: 0.225rem 0.55rem; border: none; border-radius: 4px; background: #007bff; color: #fff; cursor: pointer; font-size: 0.5rem; transition: background 0.2s; }
+        button:hover { background: #0056b3; }
+        button.delete { background: #dc3545; font-size: 0.48rem; padding: 0.2rem 0.4rem; }
+        button.delete:hover { background: #a71d2a; }
+        /* Modal styles */
+        .modal-bg {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.25); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal-bg.active { display: flex; }
+        .modal {
+            background: #fff; padding: 2rem 1.5rem; border-radius: 10px; box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+            min-width: 320px; max-width: 95vw; position: relative;
+        }
+        .modal label { display: block; margin-top: 1rem; font-size: 0.98rem; color: #333; }
+        .modal input, .modal select { border-radius: 4px; border: 1px solid #ccc; font-size: 0.9em; box-sizing: border-box; }
+        .modal .actions { margin-top: 0; text-align: right; }
+        .modal .actions button { margin-left: 0.5rem; }
+        .modal .danger-x {
+            position: absolute; left: 1rem; top: 1rem; background: #dc3545; color: #fff; border: none; border-radius: 50%; width: 1em; height: 1em; font-size: 0.7em; font-weight: bold; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 0; transition: background 0.2s;
+        }
+        .modal .danger-x:hover { background: #a71d2a; }
+        .modal .tag-group { display: flex; flex-wrap: wrap; gap: 0.5em; margin-top: 0.7em; margin-bottom: 0.5em; }
+        .modal .row-form { display: flex; gap: 0.5em; align-items: center; margin-top: 1.2em; }
+        .modal .row-form input[type="number"], .modal .row-form select { width: 5em; min-width: 0; font-size: 0.9em; }
+        .modal .row-form button { white-space: nowrap; font-size: 0.5rem; padding: 0.225rem 0.55rem; }
+        .record-list { margin-top: 1.5rem; }
+        .record-list h3 { display: none; }
+        .record-item { background: #f6f8fa; border-radius: 6px; padding: 0.5rem 0.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; font-size: 0.88em; }
+        .record-info { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.88em; }
+        .record-x { background: none; border: none; color: #dc3545; font-size: 0.6rem; font-weight: bold; margin-left: 0.7rem; cursor: pointer; line-height: 1; padding: 0 0.4rem; transition: color 0.2s; }
+        .record-x:hover { color: #a71d2a; }
+        @media (max-width: 600px) {
+            .container, .modal { padding: 1rem 0.5rem; }
+            .modal .danger-x { left: 0.5rem; top: 0.5rem; width: 0.85em; height: 0.85em; font-size: 0.5em; }
+            .modal .row-form { flex-direction: column; align-items: stretch; }
+            .modal .row-form input[type="number"], .modal .row-form select { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>To Buy List</h1>
+        <form id="addForm">
+            <input type="text" id="itemInput" placeholder="新增待買項目..." required autocomplete="off">
+            <button type="submit">新增</button>
+        </form>
+        <ul id="list"></ul>
+    </div>
+    <!-- Modal -->
+    <div class="modal-bg" id="modalBg">
+        <div class="modal">
+            <button type="button" id="modalDeleteItem" class="danger-x" title="刪除此項目">✕</button>
+            <form id="modalForm" autocomplete="off">
+                <div class="row-form">
+                    <input type="number" id="modalPrice" min="0" step="0.01" placeholder="價格">
+                    <input type="number" id="modalQty" min="1" step="1" placeholder="數量">
+                    <select id="modalPlace">
+                        <option value="地點A">地點A</option>
+                        <option value="地點B">地點B</option>
+                        <option value="地點C">地點C</option>
+                    </select>
+                    <button type="submit">新增記錄</button>
+                </div>
+                <div class="tag-group" id="modalTagGroup">
+                    <!-- 動態插入 tag 選項 -->
+                </div>
+            </form>
+            <div class="record-list" id="recordList">
+                <h3>歷史記錄</h3>
+                <!-- 動態插入記錄 -->
+            </div>
+        </div>
+    </div>
+    <script>
+        const TAG_OPTIONS = ['中超', '西超', '急', '唔急', '食物', '生活用品'];
+        const listEl = document.getElementById('list');
+        const addForm = document.getElementById('addForm');
+        const itemInput = document.getElementById('itemInput');
+
+        // Modal elements
+        const modalBg = document.getElementById('modalBg');
+        const modalForm = document.getElementById('modalForm');
+        const modalPrice = document.getElementById('modalPrice');
+        const modalQty = document.getElementById('modalQty');
+        const modalPlace = document.getElementById('modalPlace');
+        const modalDeleteItem = document.getElementById('modalDeleteItem');
+        const modalTagGroup = document.getElementById('modalTagGroup');
+        const recordList = document.getElementById('recordList');
+        let editingIdx = null;
+        let editingTags = [];
+
+        function getItems() {
+            return JSON.parse(localStorage.getItem('toBuyList') || '[]');
+        }
+        function saveItems(items) {
+            localStorage.setItem('toBuyList', JSON.stringify(items));
+        }
+        function render() {
+            let items = getItems();
+            // 排序：未勾選在前，已勾選在後
+            items = items.map((item, idx) => ({...item, _idx: idx}));
+            items.sort((a, b) => {
+                return (a.checked === b.checked) ? a._idx - b._idx : (a.checked ? 1 : -1);
+            });
+            listEl.innerHTML = '';
+            if (items.length === 0) {
+                const li = document.createElement('li');
+                li.style.textAlign = 'center';
+                li.style.color = '#888';
+                li.textContent = '目前沒有待買項目！';
+                listEl.appendChild(li);
+                return;
+            }
+            items.forEach((item) => {
+                const li = document.createElement('li');
+                // 勾選框
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'item-checkbox';
+                checkbox.checked = !!item.checked;
+                checkbox.onchange = (e) => {
+                    const allItems = getItems();
+                    allItems[item._idx].checked = checkbox.checked;
+                    saveItems(allItems);
+                    render();
+                };
+                li.appendChild(checkbox);
+                // 名稱
+                const span = document.createElement('span');
+                span.className = 'item-name' + (item.checked ? ' item-checked' : '');
+                span.textContent = typeof item === 'string' ? item : item.name;
+                span.onclick = () => openModal(item._idx);
+                li.appendChild(span);
+                // tag 顯示
+                if (item.tags && item.tags.length > 0) {
+                    const tagWrap = document.createElement('span');
+                    tagWrap.className = 'item-tags';
+                    item.tags.forEach(tag => {
+                        const tagEl = document.createElement('span');
+                        tagEl.className = 'tag';
+                        tagEl.textContent = tag;
+                        tagWrap.appendChild(tagEl);
+                    });
+                    li.appendChild(tagWrap);
+                }
+                listEl.appendChild(li);
+            });
+        }
+        addForm.onsubmit = e => {
+            e.preventDefault();
+            const val = itemInput.value.trim();
+            if (val) {
+                const items = getItems();
+                items.push({ name: val, records: [], checked: false, tags: [] });
+                saveItems(items);
+                itemInput.value = '';
+                render();
+            }
+        };
+        function openModal(idx) {
+            const items = getItems();
+            editingIdx = idx;
+            // tag 複選
+            editingTags = Array.isArray(items[idx].tags) ? [...items[idx].tags] : [];
+            renderTagOptions();
+            // 清空表單
+            modalPrice.value = '';
+            modalQty.value = '';
+            modalPlace.value = '地點A';
+            // 顯示歷史記錄
+            renderRecords(items[idx].records || []);
+            modalBg.classList.add('active');
+        }
+        function closeModal() {
+            modalBg.classList.remove('active');
+            editingIdx = null;
+        }
+        // tag 複選渲染（圓角按鈕，點擊即切換並自動儲存）
+        function renderTagOptions() {
+            modalTagGroup.innerHTML = '';
+            TAG_OPTIONS.forEach(tag => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'tag-btn' + (editingTags.includes(tag) ? ' selected' : '');
+                btn.textContent = tag;
+                btn.onclick = function() {
+                    if (editingTags.includes(tag)) {
+                        editingTags = editingTags.filter(t => t !== tag);
+                    } else {
+                        editingTags.push(tag);
+                    }
+                    // 立即儲存
+                    if (editingIdx !== null) {
+                        const items = getItems();
+                        items[editingIdx].tags = [...editingTags];
+                        saveItems(items);
+                        render();
+                    }
+                    renderTagOptions();
+                };
+                modalTagGroup.appendChild(btn);
+            });
+        }
+        // 關閉 modal（點擊背景）
+        modalBg.onclick = function(e) {
+            if (e.target === modalBg) closeModal();
+        };
+        modalForm.onsubmit = function(e) {
+            e.preventDefault();
+            if (editingIdx === null) return;
+            const items = getItems();
+            const item = items[editingIdx];
+            if (!item.records) item.records = [];
+            // 自動填入今天日期
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`;
+            // 新增一筆記錄
+            item.records.push({
+                price: modalPrice.value,
+                qty: modalQty.value,
+                place: modalPlace.value,
+                date: dateStr
+            });
+            saveItems(items);
+            renderRecords(item.records);
+            // 清空表單
+            modalPrice.value = '';
+            modalQty.value = '';
+            modalPlace.value = '地點A';
+        };
+        // 刪除此項目按鈕事件
+        modalDeleteItem.onclick = function() {
+            if (editingIdx === null) return;
+            const items = getItems();
+            if (confirm('確定要刪除此項目嗎？此動作無法復原。')) {
+                items.splice(editingIdx, 1);
+                saveItems(items);
+                closeModal();
+                render();
+            }
+        };
+        function renderRecords(records) {
+            recordList.innerHTML = '<h3>歷史記錄</h3>';
+            if (!records || records.length === 0) {
+                const div = document.createElement('div');
+                div.style.color = '#888';
+                div.style.textAlign = 'center';
+                div.textContent = '尚無記錄';
+                recordList.appendChild(div);
+                return;
+            }
+            records.forEach((rec, i) => {
+                const recDiv = document.createElement('div');
+                recDiv.className = 'record-item';
+                const info = document.createElement('div');
+                info.className = 'record-info';
+                let unitPrice = '-';
+                if (rec.price && rec.qty && !isNaN(rec.price) && !isNaN(rec.qty) && Number(rec.qty) !== 0) {
+                    unitPrice = (Number(rec.price) / Number(rec.qty)).toFixed(3);
+                }
+                info.textContent = `價格: ${rec.price || '-'}，數量: ${rec.qty || '-'}，單價: ${unitPrice}，地點: ${rec.place || '-'}，日期: ${rec.date || '-'}`;
+                const delBtn = document.createElement('button');
+                delBtn.className = 'record-x';
+                delBtn.textContent = '✕';
+                delBtn.title = '刪除';
+                delBtn.onclick = () => {
+                    const items = getItems();
+                    items[editingIdx].records.splice(i, 1);
+                    saveItems(items);
+                    renderRecords(items[editingIdx].records);
+                };
+                recDiv.appendChild(info);
+                recDiv.appendChild(delBtn);
+                recordList.appendChild(recDiv);
+            });
+        }
+        render();
+    </script>
+</body>
+</html> 
