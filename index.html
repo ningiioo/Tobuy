@@ -197,7 +197,6 @@
         function saveItems(items) {
             return db.ref(DB_PATH).set(items);
         }
-        // 即時監聽
         db.ref(DB_PATH).on('value', snapshot => {
             itemsCache = snapshot.val() || [];
             render();
@@ -226,11 +225,10 @@
                 checkbox.type = 'checkbox';
                 checkbox.className = 'item-checkbox';
                 checkbox.checked = !!item.checked;
-                checkbox.onchange = (e) => {
+                checkbox.onchange = async (e) => {
                     const allItems = getItems();
                     allItems[item._idx].checked = checkbox.checked;
-                    saveItems(allItems);
-                    render();
+                    await saveItems(allItems);
                 };
                 li.appendChild(checkbox);
                 // 名稱
@@ -267,14 +265,11 @@
         function openModal(idx) {
             const items = getItems();
             editingIdx = idx;
-            // tag 複選
             editingTags = Array.isArray(items[idx].tags) ? [...items[idx].tags] : [];
             renderTagOptions();
-            // 清空表單
             modalPrice.value = '';
             modalQty.value = '';
-            modalPlace.value = '地點A';
-            // 顯示歷史記錄
+            modalPlace.value = 'Tesco';
             renderRecords(items[idx].records || []);
             modalBg.classList.add('active');
         }
@@ -282,7 +277,6 @@
             modalBg.classList.remove('active');
             editingIdx = null;
         }
-        // tag 複選渲染（圓角按鈕，點擊即切換並自動儲存）
         function renderTagOptions() {
             modalTagGroup.innerHTML = '';
             TAG_OPTIONS.forEach(tag => {
@@ -290,63 +284,55 @@
                 btn.type = 'button';
                 btn.className = 'tag-btn' + (editingTags.includes(tag) ? ' selected' : '');
                 btn.textContent = tag;
-                btn.onclick = function() {
+                btn.onclick = async function() {
                     if (editingTags.includes(tag)) {
                         editingTags = editingTags.filter(t => t !== tag);
                     } else {
                         editingTags.push(tag);
                     }
-                    // 立即儲存
                     if (editingIdx !== null) {
                         const items = getItems();
                         items[editingIdx].tags = [...editingTags];
-                        saveItems(items);
-                        render();
+                        await saveItems(items);
                     }
                     renderTagOptions();
                 };
                 modalTagGroup.appendChild(btn);
             });
         }
-        // 關閉 modal（點擊背景）
         modalBg.onclick = function(e) {
             if (e.target === modalBg) closeModal();
         };
-        modalForm.onsubmit = function(e) {
+        modalForm.onsubmit = async function(e) {
             e.preventDefault();
             if (editingIdx === null) return;
             const items = getItems();
             const item = items[editingIdx];
             if (!item.records) item.records = [];
-            // 自動填入今天日期
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
             const dateStr = `${yyyy}-${mm}-${dd}`;
-            // 新增一筆記錄
             item.records.push({
                 price: modalPrice.value,
                 qty: modalQty.value,
                 place: modalPlace.value,
                 date: dateStr
             });
-            saveItems(items);
+            await saveItems(items);
             renderRecords(item.records);
-            // 清空表單
             modalPrice.value = '';
             modalQty.value = '';
-            modalPlace.value = '地點A';
+            modalPlace.value = 'Tesco';
         };
-        // 刪除此項目按鈕事件
-        modalDeleteItem.onclick = function() {
+        modalDeleteItem.onclick = async function() {
             if (editingIdx === null) return;
             const items = getItems();
             if (confirm('確定要刪除此項目嗎？此動作無法復原。')) {
                 items.splice(editingIdx, 1);
-                saveItems(items);
+                await saveItems(items);
                 closeModal();
-                render();
             }
         };
         function renderRecords(records) {
@@ -373,10 +359,10 @@
                 delBtn.className = 'record-x';
                 delBtn.textContent = '✕';
                 delBtn.title = '刪除';
-                delBtn.onclick = () => {
+                delBtn.onclick = async () => {
                     const items = getItems();
                     items[editingIdx].records.splice(i, 1);
-                    saveItems(items);
+                    await saveItems(items);
                     renderRecords(items[editingIdx].records);
                 };
                 recDiv.appendChild(info);
