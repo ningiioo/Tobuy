@@ -74,6 +74,42 @@
             .modal .tag-group { gap: 0.4em; }
             .tag-btn { font-size: 1em; padding: 0.3em 1em; }
         }
+        .settings-modal-btn {
+            display: inline-block;
+            background: linear-gradient(90deg,#f48fb1 60%,#a7c7e7 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            padding: 0.7em 2em;
+            margin: 0.5em 0.3em;
+            box-shadow: 0 2px 8px #f8bbd055;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .settings-modal-btn:hover {
+            background: linear-gradient(90deg,#f8bbd0 60%,#b2e0f7 100%);
+            color: #d16ba5;
+        }
+        .settings-modal-btn.alt {
+            background: #ffe0ef;
+            color: #d16ba5;
+            box-shadow: none;
+        }
+        .settings-modal-btn.alt:hover {
+            background: #f8bbd0;
+            color: #a259c6;
+        }
+        .settings-modal-btn.danger {
+            background: #f48fb1;
+            color: #fff;
+            box-shadow: 0 2px 8px #f8bbd055;
+        }
+        .settings-modal-btn.danger:hover {
+            background: #d16ba5;
+            color: #fff;
+        }
     </style>
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -134,9 +170,10 @@
     <div class="modal-bg" id="settingsModalBg" style="display:none;">
         <div class="modal" style="max-width:340px; text-align:center;">
             <h2 style="color:#d16ba5; font-size:1.3em; margin-bottom:1.5em;">設定</h2>
-            <button id="clearDataBtn" style="background:#f48fb1; color:#fff; border:none; border-radius:8px; font-size:1.1em; font-weight:600; padding:0.7em 2em; margin-bottom:1.5em; box-shadow:0 2px 8px #f8bbd055; cursor:pointer;">清除所有資料</button>
+            <div id="settingsUserBar"></div>
+            <button id="clearDataBtn" class="settings-modal-btn danger">清除所有資料</button>
             <br>
-            <button id="closeSettingsBtn" style="background:#ffe0ef; color:#d16ba5; border:none; border-radius:8px; font-size:1em; font-weight:600; padding:0.5em 1.5em; margin-top:0.5em; cursor:pointer;">關閉</button>
+            <button id="closeSettingsBtn" class="settings-modal-btn alt">關閉</button>
         </div>
     </div>
     <script>
@@ -190,19 +227,49 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
         let user = null;
         let DB_PATH = null;
 
-        // 匿名登入
-        firebase.auth().onAuthStateChanged(async function(u) {
-            if (u) {
-                user = u;
+        // Google 登入/登出 UI
+        const settingsUserBar = document.getElementById('settingsUserBar');
+        function updateSettingsUserBar() {
+            settingsUserBar.innerHTML = '';
+            if (user) {
+                const span = document.createElement('span');
+                span.textContent = user.displayName ? user.displayName : (user.email ? user.email : '已登入');
+                span.style.color = '#d16ba5';
+                span.style.fontWeight = '600';
+                span.style.marginRight = '0.7em';
+                settingsUserBar.appendChild(span);
+                const logoutBtn = document.createElement('button');
+                logoutBtn.textContent = '登出';
+                logoutBtn.className = 'settings-modal-btn alt';
+                logoutBtn.onclick = () => auth.signOut();
+                settingsUserBar.appendChild(logoutBtn);
+            } else {
+                const loginBtn = document.createElement('button');
+                loginBtn.textContent = 'Google 登入';
+                loginBtn.className = 'settings-modal-btn';
+                loginBtn.onclick = () => {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    auth.signInWithPopup(provider);
+                };
+                settingsUserBar.appendChild(loginBtn);
+            }
+        }
+
+        // 登入狀態監聽
+        auth.onAuthStateChanged(async function(u) {
+            user = u;
+            updateSettingsUserBar();
+            if (user) {
                 DB_PATH = 'toBuyList/' + user.uid;
                 await render();
-                // 實時監聽
                 db.ref(DB_PATH).on('value', function() { render(); });
             } else {
-                await firebase.auth().signInAnonymously();
+                DB_PATH = null;
+                document.getElementById('list').innerHTML = '';
             }
         });
 
