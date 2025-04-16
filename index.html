@@ -58,8 +58,8 @@
         .modal .spacer { height: 1em; }
         .record-list { margin-top: 1.5rem; }
         .record-list h3 { display: none; }
-        .record-item { border: none; background: none; border-radius: 0; padding: 0.3rem 0; margin-bottom: 0.3rem; display: flex; align-items: center; font-size: 1em; box-shadow: none; }
-        .record-info { color: #a259c6; font-size: 1em; }
+        .record-item { border: none; background: none; border-radius: 0; padding: 0.7rem 0 0.7rem 0; margin-bottom: 0.7rem; display: flex; align-items: center; font-size: 1em; }
+        .record-info { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1em; color: #a259c6; }
         .record-x { background: none; border: none; color: #f48fb1; font-size: 1.1em; font-weight: bold; margin-left: 0.7rem; cursor: pointer; line-height: 1; padding: 0 0.4rem; transition: color 0.2s; }
         .record-x:hover { color: #d16ba5; }
         @media (max-width: 600px) {
@@ -74,16 +74,36 @@
             .modal .tag-group { gap: 0.4em; }
             .tag-btn { font-size: 1em; padding: 0.3em 1em; }
         }
+        .tabs { display: flex; gap: 0.5em; margin-bottom: 1.2em; justify-content: center; }
+        .tab-btn { background: #ffe0ef; color: #d16ba5; border: none; border-radius: 16px 16px 0 0; font-size: 1.1em; padding: 0.6em 2em; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px #f8bbd055; transition: background 0.18s, color 0.18s; }
+        .tab-btn.active, .tab-btn:active { background: #f48fb1; color: #fff; }
+        .tab-btn:hover { background: #f8bbd0; color: #a259c6; }
+        .settings-icon { position: absolute; top: 1.2em; right: 1.2em; z-index: 20; background: #fff6fa; border-radius: 50%; box-shadow: 0 2px 8px #f8bbd055; padding: 0.3em; cursor: pointer; transition: background 0.18s; }
+        .settings-icon:hover { background: #ffe0ef; }
+        .settings-modal { min-width: 260px; max-width: 95vw; }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="settings-icon" id="openSettingsBtn" title="設定">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d16ba5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 8.6 15a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 15 8.6a1.65 1.65 0 0 0 1.82.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 15z"/></svg>
+        </div>
         <h1>To Buy List</h1>
         <form id="addForm">
             <input type="text" id="itemInput" placeholder="新增待買項目..." required autocomplete="off">
             <button type="submit">新增</button>
         </form>
         <ul id="list"></ul>
+    </div>
+    <!-- 設定彈窗 -->
+    <div class="modal-bg" id="settingsModalBg" style="display:none;">
+        <div class="modal settings-modal">
+            <button type="button" id="closeSettingsBtn" class="danger-x" title="關閉">✕</button>
+            <div style="text-align:center; margin-top:1.5em;">
+                <button id="clearDataBtn" style="background:#f48fb1; color:#fff; font-weight:600; border-radius:8px; font-size:1.1em; padding:0.7em 2em; margin-top:0.5em; box-shadow:0 2px 8px #f8bbd055; display:inline-block;">清除所有資料</button>
+                <div id="clearMsg" style="margin-top:1.5em; color:#d16ba5; font-size:1em;"></div>
+            </div>
+        </div>
     </div>
     <!-- Modal -->
     <div class="modal-bg" id="modalBg">
@@ -122,211 +142,252 @@
         </div>
     </div>
     <script>
-        const TAG_OPTIONS = ['中超', '西超', '急', '唔急', '食物', '生活用品'];
-        const listEl = document.getElementById('list');
-        const addForm = document.getElementById('addForm');
-        const itemInput = document.getElementById('itemInput');
+        document.addEventListener('DOMContentLoaded', function() {
+            const TAG_OPTIONS = ['中超', '西超', '急', '唔急', '食物', '生活用品'];
+            const listEl = document.getElementById('list');
+            const addForm = document.getElementById('addForm');
+            const itemInput = document.getElementById('itemInput');
 
-        // Modal elements
-        const modalBg = document.getElementById('modalBg');
-        const modalForm = document.getElementById('modalForm');
-        const modalPrice = document.getElementById('modalPrice');
-        const modalQty = document.getElementById('modalQty');
-        const modalPlace = document.getElementById('modalPlace');
-        const modalDeleteItem = document.getElementById('modalDeleteItem');
-        const modalTagGroup = document.getElementById('modalTagGroup');
-        const recordList = document.getElementById('recordList');
-        let editingIdx = null;
-        let editingTags = [];
+            // Modal elements
+            const modalBg = document.getElementById('modalBg');
+            const modalForm = document.getElementById('modalForm');
+            const modalPrice = document.getElementById('modalPrice');
+            const modalQty = document.getElementById('modalQty');
+            const modalPlace = document.getElementById('modalPlace');
+            const modalDeleteItem = document.getElementById('modalDeleteItem');
+            const modalTagGroup = document.getElementById('modalTagGroup');
+            const recordList = document.getElementById('recordList');
+            let editingIdx = null;
+            let editingTags = [];
 
-        function getItems() {
-            return JSON.parse(localStorage.getItem('toBuyList') || '[]');
-        }
-        function saveItems(items) {
-            localStorage.setItem('toBuyList', JSON.stringify(items));
-        }
-        function render() {
-            let items = getItems();
-            // 排序：未勾選在前，已勾選在後
-            items = items.map((item, idx) => ({...item, _idx: idx}));
-            items.sort((a, b) => {
-                return (a.checked === b.checked) ? a._idx - b._idx : (a.checked ? 1 : -1);
-            });
-            listEl.innerHTML = '';
-            if (items.length === 0) {
-                const li = document.createElement('li');
-                li.style.textAlign = 'center';
-                li.style.color = '#888';
-                li.textContent = '目前沒有待買項目！';
-                listEl.appendChild(li);
-                return;
+            function getItems() {
+                return JSON.parse(localStorage.getItem('toBuyList') || '[]');
             }
-            items.forEach((item) => {
-                const li = document.createElement('li');
-                // 勾選框
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'item-checkbox';
-                checkbox.checked = !!item.checked;
-                checkbox.onchange = (e) => {
-                    const allItems = getItems();
-                    allItems[item._idx].checked = checkbox.checked;
-                    saveItems(allItems);
-                    render();
-                };
-                li.appendChild(checkbox);
-                // 名稱
-                const span = document.createElement('span');
-                span.className = 'item-name' + (item.checked ? ' item-checked' : '');
-                span.textContent = typeof item === 'string' ? item : item.name;
-                span.onclick = () => openModal(item._idx);
-                li.appendChild(span);
-                // tag 顯示
-                if (item.tags && item.tags.length > 0) {
-                    const tagWrap = document.createElement('span');
-                    tagWrap.className = 'item-tags';
-                    item.tags.forEach(tag => {
-                        const tagEl = document.createElement('span');
-                        tagEl.className = 'tag';
-                        tagEl.textContent = tag;
-                        tagWrap.appendChild(tagEl);
-                    });
-                    li.appendChild(tagWrap);
+            function saveItems(items) {
+                localStorage.setItem('toBuyList', JSON.stringify(items));
+            }
+            function render() {
+                let items = getItems();
+                // 排序：未勾選在前，已勾選在後
+                items = items.map((item, idx) => ({...item, _idx: idx}));
+                items.sort((a, b) => {
+                    return (a.checked === b.checked) ? a._idx - b._idx : (a.checked ? 1 : -1);
+                });
+                listEl.innerHTML = '';
+                if (items.length === 0) {
+                    const li = document.createElement('li');
+                    li.style.textAlign = 'center';
+                    li.style.color = '#888';
+                    li.textContent = '目前沒有待買項目！';
+                    listEl.appendChild(li);
+                    return;
                 }
-                listEl.appendChild(li);
-            });
-        }
-        addForm.onsubmit = e => {
-            e.preventDefault();
-            const val = itemInput.value.trim();
-            if (val) {
-                const items = getItems();
-                items.push({ name: val, records: [], checked: false, tags: [] });
-                saveItems(items);
-                itemInput.value = '';
-                render();
-            }
-        };
-        function openModal(idx) {
-            const items = getItems();
-            editingIdx = idx;
-            // tag 複選
-            editingTags = Array.isArray(items[idx].tags) ? [...items[idx].tags] : [];
-            renderTagOptions();
-            // 清空表單
-            modalPrice.value = '';
-            modalQty.value = '';
-            modalPlace.value = '地點A';
-            // 顯示歷史記錄
-            renderRecords(items[idx].records || []);
-            modalBg.classList.add('active');
-        }
-        function closeModal() {
-            modalBg.classList.remove('active');
-            editingIdx = null;
-        }
-        // tag 複選渲染（圓角按鈕，點擊即切換並自動儲存）
-        function renderTagOptions() {
-            modalTagGroup.innerHTML = '';
-            TAG_OPTIONS.forEach(tag => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'tag-btn' + (editingTags.includes(tag) ? ' selected' : '');
-                btn.textContent = tag;
-                btn.onclick = function() {
-                    if (editingTags.includes(tag)) {
-                        editingTags = editingTags.filter(t => t !== tag);
-                    } else {
-                        editingTags.push(tag);
-                    }
-                    // 立即儲存
-                    if (editingIdx !== null) {
-                        const items = getItems();
-                        items[editingIdx].tags = [...editingTags];
-                        saveItems(items);
+                items.forEach((item) => {
+                    const li = document.createElement('li');
+                    // 勾選框
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'item-checkbox';
+                    checkbox.checked = !!item.checked;
+                    checkbox.onchange = (e) => {
+                        const allItems = getItems();
+                        allItems[item._idx].checked = checkbox.checked;
+                        saveItems(allItems);
                         render();
+                    };
+                    li.appendChild(checkbox);
+                    // 名稱
+                    const span = document.createElement('span');
+                    span.className = 'item-name' + (item.checked ? ' item-checked' : '');
+                    span.textContent = typeof item === 'string' ? item : item.name;
+                    span.onclick = () => openModal(item._idx);
+                    li.appendChild(span);
+                    // tag 顯示
+                    if (item.tags && item.tags.length > 0) {
+                        const tagWrap = document.createElement('span');
+                        tagWrap.className = 'item-tags';
+                        item.tags.forEach(tag => {
+                            const tagEl = document.createElement('span');
+                            tagEl.className = 'tag';
+                            tagEl.textContent = tag;
+                            tagWrap.appendChild(tagEl);
+                        });
+                        li.appendChild(tagWrap);
                     }
-                    renderTagOptions();
-                };
-                modalTagGroup.appendChild(btn);
-            });
-        }
-        // 關閉 modal（點擊背景）
-        modalBg.onclick = function(e) {
-            if (e.target === modalBg) closeModal();
-        };
-        modalForm.onsubmit = function(e) {
-            e.preventDefault();
-            if (editingIdx === null) return;
-            const items = getItems();
-            const item = items[editingIdx];
-            if (!item.records) item.records = [];
-            // 自動填入今天日期
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const dateStr = `${yyyy}-${mm}-${dd}`;
-            // 新增一筆記錄
-            item.records.push({
-                price: modalPrice.value,
-                qty: modalQty.value,
-                place: modalPlace.value,
-                date: dateStr
-            });
-            saveItems(items);
-            renderRecords(item.records);
-            // 清空表單
-            modalPrice.value = '';
-            modalQty.value = '';
-            modalPlace.value = '地點A';
-        };
-        // 刪除此項目按鈕事件
-        modalDeleteItem.onclick = function() {
-            if (editingIdx === null) return;
-            const items = getItems();
-            if (confirm('確定要刪除此項目嗎？此動作無法復原。')) {
-                items.splice(editingIdx, 1);
-                saveItems(items);
-                closeModal();
-                render();
+                    listEl.appendChild(li);
+                });
             }
-        };
-        function renderRecords(records) {
-            recordList.innerHTML = '<h3>歷史記錄</h3>';
-            if (!records || records.length === 0) {
-                const div = document.createElement('div');
-                div.style.color = '#888';
-                div.style.textAlign = 'center';
-                div.textContent = '尚無記錄';
-                recordList.appendChild(div);
-                return;
-            }
-            records.forEach((rec, i) => {
-                const recDiv = document.createElement('div');
-                recDiv.className = 'record-item';
-                const info = document.createElement('div');
-                info.className = 'record-info';
-                let unitPrice = '-';
-                if (rec.price && rec.qty && !isNaN(rec.price) && !isNaN(rec.qty) && Number(rec.qty) !== 0) {
-                    unitPrice = (Number(rec.price) / Number(rec.qty)).toFixed(3);
-                }
-                info.textContent = `£ ${rec.price || '-'} for ${rec.qty || '-'} (${unitPrice}) ||  ${rec.place || '-'} ||  ${rec.date || '-'}`;
-                const delBtn = document.createElement('button');
-                delBtn.className = 'record-x';
-                delBtn.textContent = '✕';
-                delBtn.title = '刪除';
-                delBtn.onclick = () => {
+            addForm.onsubmit = e => {
+                e.preventDefault();
+                const val = itemInput.value.trim();
+                if (val) {
                     const items = getItems();
-                    items[editingIdx].records.splice(i, 1);
+                    items.push({ name: val, records: [], checked: false, tags: [] });
                     saveItems(items);
-                    renderRecords(items[editingIdx].records);
+                    itemInput.value = '';
+                    render();
+                }
+            };
+            function openModal(idx) {
+                const items = getItems();
+                editingIdx = idx;
+                // tag 複選
+                editingTags = Array.isArray(items[idx].tags) ? [...items[idx].tags] : [];
+                renderTagOptions();
+                // 清空表單
+                modalPrice.value = '';
+                modalQty.value = '';
+                modalPlace.value = '地點A';
+                // 顯示歷史記錄
+                renderRecords(items[idx].records || []);
+                modalBg.classList.add('active');
+            }
+            function closeModal() {
+                modalBg.classList.remove('active');
+                editingIdx = null;
+            }
+            // tag 複選渲染（圓角按鈕，點擊即切換並自動儲存）
+            function renderTagOptions() {
+                modalTagGroup.innerHTML = '';
+                TAG_OPTIONS.forEach(tag => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'tag-btn' + (editingTags.includes(tag) ? ' selected' : '');
+                    btn.textContent = tag;
+                    btn.onclick = function() {
+                        if (editingTags.includes(tag)) {
+                            editingTags = editingTags.filter(t => t !== tag);
+                        } else {
+                            editingTags.push(tag);
+                        }
+                        // 立即儲存
+                        if (editingIdx !== null) {
+                            const items = getItems();
+                            items[editingIdx].tags = [...editingTags];
+                            saveItems(items);
+                            render();
+                        }
+                        renderTagOptions();
+                    };
+                    modalTagGroup.appendChild(btn);
+                });
+            }
+            // 關閉 modal（點擊背景）
+            modalBg.onclick = function(e) {
+                if (e.target === modalBg) closeModal();
+            };
+            modalForm.onsubmit = function(e) {
+                e.preventDefault();
+                if (editingIdx === null) return;
+                const items = getItems();
+                const item = items[editingIdx];
+                if (!item.records) item.records = [];
+                // 自動填入今天日期
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const dateStr = `${yyyy}-${mm}-${dd}`;
+                // 新增一筆記錄
+                item.records.push({
+                    price: modalPrice.value,
+                    qty: modalQty.value,
+                    place: modalPlace.value,
+                    date: dateStr
+                });
+                saveItems(items);
+                renderRecords(item.records);
+                // 清空表單
+                modalPrice.value = '';
+                modalQty.value = '';
+                modalPlace.value = '地點A';
+            };
+            // 刪除此項目按鈕事件
+            modalDeleteItem.onclick = function() {
+                if (editingIdx === null) return;
+                const items = getItems();
+                if (confirm('確定要刪除此項目嗎？此動作無法復原。')) {
+                    items.splice(editingIdx, 1);
+                    saveItems(items);
+                    closeModal();
+                    render();
+                }
+            };
+            function renderRecords(records) {
+                recordList.innerHTML = '<h3>歷史記錄</h3>';
+                if (!records || records.length === 0) {
+                    const div = document.createElement('div');
+                    div.style.color = '#888';
+                    div.style.textAlign = 'center';
+                    div.textContent = '尚無記錄';
+                    recordList.appendChild(div);
+                    return;
+                }
+                records.forEach((rec, i) => {
+                    const recDiv = document.createElement('div');
+                    recDiv.className = 'record-item';
+                    const info = document.createElement('div');
+                    info.className = 'record-info';
+                    let unitPrice = '-';
+                    if (rec.price && rec.qty && !isNaN(rec.price) && !isNaN(rec.qty) && Number(rec.qty) !== 0) {
+                        unitPrice = (Number(rec.price) / Number(rec.qty)).toFixed(3);
+                    }
+                    info.textContent = `£ ${rec.price || '-'} for ${rec.qty || '-'} (${unitPrice}) ||  ${rec.place || '-'} ||  ${rec.date || '-'}`;
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'record-x';
+                    delBtn.textContent = '✕';
+                    delBtn.title = '刪除';
+                    delBtn.onclick = () => {
+                        const items = getItems();
+                        items[editingIdx].records.splice(i, 1);
+                        saveItems(items);
+                        renderRecords(items[editingIdx].records);
+                    };
+                    recDiv.appendChild(info);
+                    recDiv.appendChild(delBtn);
+                    recordList.appendChild(recDiv);
+                });
+            }
+            render();
+            // 分頁切換
+            const tabMain = document.getElementById('tabMain');
+            const tabSettings = document.getElementById('tabSettings');
+            const mainPage = document.getElementById('mainPage');
+            const settingsPage = document.getElementById('settingsPage');
+            tabMain.onclick = function() {
+                tabMain.classList.add('active');
+                tabSettings.classList.remove('active');
+                mainPage.style.display = '';
+                settingsPage.style.display = 'none';
+            };
+            tabSettings.onclick = function() {
+                tabSettings.classList.add('active');
+                tabMain.classList.remove('active');
+                mainPage.style.display = 'none';
+                settingsPage.style.display = '';
+            };
+            // 設定彈窗邏輯
+            const openSettingsBtn = document.getElementById('openSettingsBtn');
+            const settingsModalBg = document.getElementById('settingsModalBg');
+            const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+            if (openSettingsBtn && settingsModalBg && closeSettingsBtn) {
+                openSettingsBtn.onclick = function() { settingsModalBg.style.display = 'flex'; };
+                closeSettingsBtn.onclick = function() { settingsModalBg.style.display = 'none'; };
+                settingsModalBg.onclick = function(e) { if(e.target === settingsModalBg) settingsModalBg.style.display = 'none'; };
+            }
+            // 清除資料
+            const clearDataBtn = document.getElementById('clearDataBtn');
+            const clearMsg = document.getElementById('clearMsg');
+            if (clearDataBtn) {
+                clearDataBtn.onclick = function() {
+                    if(confirm('確定要清除所有待買清單資料嗎？此動作無法復原。')) {
+                        localStorage.removeItem('toBuyList');
+                        if (clearMsg) clearMsg.textContent = '所有資料已清除！';
+                        setTimeout(()=>{ if (clearMsg) clearMsg.textContent = ''; location.reload(); }, 1200);
+                    }
                 };
-                recDiv.appendChild(info);
-                recDiv.appendChild(delBtn);
-                recordList.appendChild(recDiv);
-            });
-        }
+            }
+        });
     </script>
 </body>
-</html>
+</html> 
