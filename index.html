@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Buy List</title>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <!-- Firebase Database -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff0f6; margin: 0; padding: 0; }
         .container { max-width: 480px; margin: 40px auto; background: #fff6fa; padding: 2rem 1.5rem; border-radius: 18px; box-shadow: 0 2px 16px rgba(255, 182, 193, 0.13); border: 2px solid #ffe0ef; }
@@ -74,49 +78,7 @@
             .modal .tag-group { gap: 0.4em; }
             .tag-btn { font-size: 1em; padding: 0.3em 1em; }
         }
-        .settings-modal-btn {
-            display: inline-block;
-            background: linear-gradient(90deg,#f48fb1 60%,#a7c7e7 100%);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: 600;
-            padding: 0.7em 2em;
-            margin: 0.5em 0.3em;
-            box-shadow: 0 2px 8px #f8bbd055;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-        }
-        .settings-modal-btn:hover {
-            background: linear-gradient(90deg,#f8bbd0 60%,#b2e0f7 100%);
-            color: #d16ba5;
-        }
-        .settings-modal-btn.alt {
-            background: #ffe0ef;
-            color: #d16ba5;
-            box-shadow: none;
-        }
-        .settings-modal-btn.alt:hover {
-            background: #f8bbd0;
-            color: #a259c6;
-        }
-        .settings-modal-btn.danger {
-            background: #f48fb1;
-            color: #fff;
-            box-shadow: 0 2px 8px #f8bbd055;
-        }
-        .settings-modal-btn.danger:hover {
-            background: #d16ba5;
-            color: #fff;
-        }
     </style>
-    <!-- Firebase App (the core Firebase SDK) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <!-- Firebase Auth -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <!-- Firebase Database -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="container" style="position:relative;">
@@ -170,13 +132,25 @@
     <div class="modal-bg" id="settingsModalBg" style="display:none;">
         <div class="modal" style="max-width:340px; text-align:center;">
             <h2 style="color:#d16ba5; font-size:1.3em; margin-bottom:1.5em;">設定</h2>
-            <div id="settingsUserBar"></div>
-            <button id="clearDataBtn" class="settings-modal-btn danger">清除所有資料</button>
+            <button id="clearDataBtn" style="background:#f48fb1; color:#fff; border:none; border-radius:8px; font-size:1.1em; font-weight:600; padding:0.7em 2em; margin-bottom:1.5em; box-shadow:0 2px 8px #f8bbd055; cursor:pointer;">清除所有資料</button>
             <br>
-            <button id="closeSettingsBtn" class="settings-modal-btn alt">關閉</button>
+            <button id="closeSettingsBtn" style="background:#ffe0ef; color:#d16ba5; border:none; border-radius:8px; font-size:1em; font-weight:600; padding:0.5em 1.5em; margin-top:0.5em; cursor:pointer;">關閉</button>
         </div>
     </div>
     <script>
+        // Firebase config
+        const firebaseConfig = {
+          apiKey: "AIzaSyAX0SfHvlelWWdg7Q-8WHzmWNdKE2vtI3w",
+          authDomain: "to-buy-list-2323b.firebaseapp.com",
+          projectId: "to-buy-list-2323b",
+          storageBucket: "to-buy-list-2323b.appspot.com",
+          messagingSenderId: "363437967200",
+          appId: "1:363437967200:web:798c997017e75d2a278005"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const DB_PATH = 'toBuyList';
+
         const TAG_OPTIONS = ['中超', '西超', '急', '唔急', '食物', '生活用品'];
         const listEl = document.getElementById('list');
         const addForm = document.getElementById('addForm');
@@ -210,83 +184,27 @@
         };
         clearDataBtn.onclick = async function() {
             if (confirm('確定要清除所有資料嗎？此動作無法復原。')) {
-                await saveItems([]);
+                await db.ref(DB_PATH).set([]);
                 settingsModalBg.style.display = 'none';
-                await render();
             }
         };
 
-        // Firebase config
-        const firebaseConfig = {
-          apiKey: "AIzaSyAX0SfHvlelWWdg7Q-8WHzmWNdKE2vtI3w",
-          authDomain: "to-buy-list-2323b.firebaseapp.com",
-          projectId: "to-buy-list-2323b",
-          storageBucket: "to-buy-list-2323b.appspot.com",
-          messagingSenderId: "363437967200",
-          appId: "1:363437967200:web:798c997017e75d2a278005"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const auth = firebase.auth();
-        let user = null;
-        let DB_PATH = null;
-
-        // Google 登入/登出 UI
-        const settingsUserBar = document.getElementById('settingsUserBar');
-        function updateSettingsUserBar() {
-            settingsUserBar.innerHTML = '';
-            if (user) {
-                const span = document.createElement('span');
-                span.textContent = user.displayName ? user.displayName : (user.email ? user.email : '已登入');
-                span.style.color = '#d16ba5';
-                span.style.fontWeight = '600';
-                span.style.marginRight = '0.7em';
-                settingsUserBar.appendChild(span);
-                const logoutBtn = document.createElement('button');
-                logoutBtn.textContent = '登出';
-                logoutBtn.className = 'settings-modal-btn alt';
-                logoutBtn.onclick = () => auth.signOut();
-                settingsUserBar.appendChild(logoutBtn);
-            } else {
-                const loginBtn = document.createElement('button');
-                loginBtn.textContent = 'Google 登入';
-                loginBtn.className = 'settings-modal-btn';
-                loginBtn.onclick = () => {
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    auth.signInWithPopup(provider);
-                };
-                settingsUserBar.appendChild(loginBtn);
-            }
+        // 取代 localStorage 的 getItems/saveItems，並加上即時監聽
+        let itemsCache = [];
+        function getItems() {
+            return itemsCache;
         }
-
-        // 登入狀態監聽
-        auth.onAuthStateChanged(async function(u) {
-            user = u;
-            updateSettingsUserBar();
-            if (user) {
-                DB_PATH = 'toBuyList/' + user.uid;
-                await render();
-                db.ref(DB_PATH).on('value', function() { render(); });
-            } else {
-                DB_PATH = null;
-                document.getElementById('list').innerHTML = '';
-            }
+        function saveItems(items) {
+            return db.ref(DB_PATH).set(items);
+        }
+        // 即時監聽
+        db.ref(DB_PATH).on('value', snapshot => {
+            itemsCache = snapshot.val() || [];
+            render();
         });
 
-        // 取得資料（回傳 Promise<Array>）
-        async function getItems() {
-            if (!DB_PATH) return [];
-            const snapshot = await db.ref(DB_PATH).get();
-            return snapshot.val() || [];
-        }
-        // 寫入資料（回傳 Promise）
-        async function saveItems(items) {
-            if (!DB_PATH) return;
-            await db.ref(DB_PATH).set(items);
-        }
-
-        async function render() {
-            let items = await getItems();
+        function render() {
+            let items = getItems();
             // 排序：未勾選在前，已勾選在後
             items = items.map((item, idx) => ({...item, _idx: idx}));
             items.sort((a, b) => {
@@ -336,15 +254,14 @@
                 listEl.appendChild(li);
             });
         }
-        addForm.onsubmit = e => {
+        addForm.onsubmit = async e => {
             e.preventDefault();
             const val = itemInput.value.trim();
             if (val) {
                 const items = getItems();
                 items.push({ name: val, records: [], checked: false, tags: [] });
-                saveItems(items);
+                await saveItems(items);
                 itemInput.value = '';
-                render();
             }
         };
         function openModal(idx) {
