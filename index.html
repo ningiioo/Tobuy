@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Buy List</title>
-    <!-- Firebase App (the core Firebase SDK) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <!-- Firebase Database -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff0f6; margin: 0; padding: 0; }
         .container { max-width: 480px; margin: 40px auto; background: #fff6fa; padding: 2rem 1.5rem; border-radius: 18px; box-shadow: 0 2px 16px rgba(255, 182, 193, 0.13); border: 2px solid #ffe0ef; }
@@ -66,17 +62,34 @@
         .record-info { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1em; color: #a259c6; }
         .record-x { background: none; border: none; color: #f48fb1; font-size: 1.1em; font-weight: bold; margin-left: 0.7rem; cursor: pointer; line-height: 1; padding: 0 0.4rem; transition: color 0.2s; }
         .record-x:hover { color: #d16ba5; }
+        .modal .modal-header-row {
+            display: flex;
+            align-items: center;
+            gap: 0.7em;
+            margin-bottom: 1em;
+        }
+        .modal .modal-header-row input[type="text"] {
+            flex: 1;
+            margin-bottom: 0;
+            min-width: 0;
+        }
+        .modal .danger-x {
+            position: static;
+            margin-left: 0.5em;
+            align-self: flex-start;
+        }
         @media (max-width: 600px) {
             .container { padding: 0.5rem 0.2rem; max-width: 100vw; }
             h1 { font-size: 1.3rem; }
             li { font-size: 1em; padding: 0.7rem 0.2rem; }
             .modal { padding: 1rem 0.2rem; min-width: 0; width: 98vw; }
-            .modal .danger-x { left: 0.5rem; top: 0.5rem; width: 1.2em; height: 1.2em; font-size: 0.9em; }
+            .modal .danger-x { margin-left: 0.2em; }
             .modal .row-form { flex-direction: column; align-items: stretch; gap: 0.5em; }
             .modal .row-form input[type="number"], .modal .row-form select { width: 100%; font-size: 1em; }
             .modal .row-form button { font-size: 1em; padding: 0.5rem 1.2rem; }
             .modal .tag-group { gap: 0.4em; }
             .tag-btn { font-size: 1em; padding: 0.3em 1em; }
+            .modal .modal-header-row { gap: 0.3em; }
         }
     </style>
 </head>
@@ -137,240 +150,327 @@
             <button id="closeSettingsBtn" style="background:#ffe0ef; color:#d16ba5; border:none; border-radius:8px; font-size:1em; font-weight:600; padding:0.5em 1.5em; margin-top:0.5em; cursor:pointer;">關閉</button>
         </div>
     </div>
-    <script>
-        // Firebase config
-        const firebaseConfig = {
-          apiKey: "AIzaSyAX0SfHvlelWWdg7Q-8WHzmWNdKE2vtI3w",
-          authDomain: "to-buy-list-2323b.firebaseapp.com",
-          projectId: "to-buy-list-2323b",
-          storageBucket: "to-buy-list-2323b.appspot.com",
-          messagingSenderId: "363437967200",
-          appId: "1:363437967200:web:798c997017e75d2a278005"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const DB_PATH = 'toBuyList';
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, setDoc, doc, addDoc, deleteDoc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-        const TAG_OPTIONS = ['中超', '西超', '急', '唔急', '食物', '生活用品'];
-        const listEl = document.getElementById('list');
-        const addForm = document.getElementById('addForm');
-        const itemInput = document.getElementById('itemInput');
+    const firebaseConfig = {
+      apiKey: "AIzaSyAX0SfHvlelWWdg7Q-8WHzmWNdKE2vtI3w",
+      authDomain: "to-buy-list-2323b.firebaseapp.com",
+      projectId: "to-buy-list-2323b",
+      storageBucket: "to-buy-list-2323b.firebasestorage.app",
+      messagingSenderId: "363437967200",
+      appId: "1:363437967200:web:798c997017e75d2a278005"
+    };
 
-        // Modal elements
-        const modalBg = document.getElementById('modalBg');
-        const modalForm = document.getElementById('modalForm');
-        const modalPrice = document.getElementById('modalPrice');
-        const modalQty = document.getElementById('modalQty');
-        const modalPlace = document.getElementById('modalPlace');
-        const modalDeleteItem = document.getElementById('modalDeleteItem');
-        const modalTagGroup = document.getElementById('modalTagGroup');
-        const recordList = document.getElementById('recordList');
-        let editingIdx = null;
-        let editingTags = [];
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const colRef = collection(db, "toBuyList");
 
-        // 新增設定modal功能
-        const settingsBtn = document.getElementById('settingsBtn');
-        const settingsModalBg = document.getElementById('settingsModalBg');
-        const clearDataBtn = document.getElementById('clearDataBtn');
-        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-        settingsBtn.onclick = function() {
-            settingsModalBg.style.display = 'flex';
+    // Firestore 資料操作
+    async function getItems() {
+      const q = query(colRef, orderBy('createdAt'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+    }
+    async function addItem(item) {
+      item.createdAt = Date.now();
+      await addDoc(colRef, item);
+    }
+    async function updateItem(id, data) {
+      await updateDoc(doc(colRef, id), data);
+    }
+    async function deleteItem(id) {
+      await deleteDoc(doc(colRef, id));
+    }
+    async function clearAll() {
+      const q = await getDocs(colRef);
+      for (const d of q.docs) {
+        await deleteDoc(doc(colRef, d.id));
+      }
+    }
+
+    // UI 綁定與渲染
+    const listEl = document.getElementById('list');
+    const addForm = document.getElementById('addForm');
+    const itemInput = document.getElementById('itemInput');
+    const modalBg = document.getElementById('modalBg');
+    const modalForm = document.getElementById('modalForm');
+    const modalPrice = document.getElementById('modalPrice');
+    const modalQty = document.getElementById('modalQty');
+    const modalPlace = document.getElementById('modalPlace');
+    const modalDeleteItem = document.getElementById('modalDeleteItem');
+    const modalTagGroup = document.getElementById('modalTagGroup');
+    const recordList = document.getElementById('recordList');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModalBg = document.getElementById('settingsModalBg');
+    const clearDataBtn = document.getElementById('clearDataBtn');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    let editingIdx = null;
+    let editingTags = [];
+    let itemsCache = [];
+
+    const TAG_OPTIONS = ['中超', '西超', '急', '唔急', '食物', '生活用品'];
+
+    function findItemById(id) {
+      return itemsCache.find(item => item.id === id);
+    }
+
+    function render() {
+      let items = itemsCache.slice();
+      // 排序：未勾選在前，已勾選在後
+      items.sort((a, b) => (a.checked === b.checked) ? a.createdAt - b.createdAt : (a.checked ? 1 : -1));
+      listEl.innerHTML = '';
+      if (items.length === 0) {
+        const li = document.createElement('li');
+        li.style.textAlign = 'center';
+        li.style.color = '#888';
+        li.textContent = '目前沒有待買項目！';
+        listEl.appendChild(li);
+        return;
+      }
+      items.forEach((item) => {
+        const li = document.createElement('li');
+        // 勾選框
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'item-checkbox';
+        checkbox.checked = !!item.checked;
+        checkbox.onchange = async (e) => {
+          await updateItem(item.id, { checked: checkbox.checked });
         };
-        closeSettingsBtn.onclick = function() {
-            settingsModalBg.style.display = 'none';
-        };
-        settingsModalBg.onclick = function(e) {
-            if (e.target === settingsModalBg) settingsModalBg.style.display = 'none';
-        };
-        clearDataBtn.onclick = async function() {
-            if (confirm('確定要清除所有資料嗎？此動作無法復原。')) {
-                await db.ref(DB_PATH).set([]);
-                settingsModalBg.style.display = 'none';
+        li.appendChild(checkbox);
+        // 名稱
+        const span = document.createElement('span');
+        span.className = 'item-name' + (item.checked ? ' item-checked' : '');
+        span.textContent = item.name;
+        span.onclick = () => openModal(item.id);
+        // 新增：雙擊可編輯名稱
+        span.ondblclick = function(e) {
+          e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = item.name;
+          input.style.fontSize = '1.1em';
+          input.style.color = '#a259c6';
+          input.style.width = '80%';
+          input.onblur = async function() {
+            const newName = input.value.trim();
+            if (newName && newName !== item.name) {
+              await updateItem(item.id, { name: newName });
             }
-        };
-
-        // 取代 localStorage 的 getItems/saveItems，並加上即時監聽
-        let itemsCache = [];
-        function getItems() {
-            return itemsCache;
-        }
-        function saveItems(items) {
-            return db.ref(DB_PATH).set(items);
-        }
-        db.ref(DB_PATH).on('value', snapshot => {
-            itemsCache = snapshot.val() || [];
             render();
-        });
+          };
+          input.onkeydown = async function(ev) {
+            if (ev.key === 'Enter') {
+              input.blur();
+            } else if (ev.key === 'Escape') {
+              render();
+            }
+          };
+          li.replaceChild(input, span);
+          input.focus();
+        };
+        li.appendChild(span);
+        // tag 顯示
+        if (item.tags && item.tags.length > 0) {
+          const tagWrap = document.createElement('span');
+          tagWrap.className = 'item-tags';
+          item.tags.forEach(tag => {
+            const tagEl = document.createElement('span');
+            tagEl.className = 'tag';
+            tagEl.textContent = tag;
+            tagWrap.appendChild(tagEl);
+          });
+          li.appendChild(tagWrap);
+        }
+        listEl.appendChild(li);
+      });
+    }
 
-        function render() {
-            let items = getItems();
-            // 排序：未勾選在前，已勾選在後
-            items = items.map((item, idx) => ({...item, _idx: idx}));
-            items.sort((a, b) => {
-                return (a.checked === b.checked) ? a._idx - b._idx : (a.checked ? 1 : -1);
-            });
-            listEl.innerHTML = '';
-            if (items.length === 0) {
-                const li = document.createElement('li');
-                li.style.textAlign = 'center';
-                li.style.color = '#888';
-                li.textContent = '目前沒有待買項目！';
-                listEl.appendChild(li);
-                return;
-            }
-            items.forEach((item) => {
-                const li = document.createElement('li');
-                // 勾選框
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'item-checkbox';
-                checkbox.checked = !!item.checked;
-                checkbox.onchange = async (e) => {
-                    const allItems = getItems();
-                    allItems[item._idx].checked = checkbox.checked;
-                    await saveItems(allItems);
-                };
-                li.appendChild(checkbox);
-                // 名稱
-                const span = document.createElement('span');
-                span.className = 'item-name' + (item.checked ? ' item-checked' : '');
-                span.textContent = typeof item === 'string' ? item : item.name;
-                span.onclick = () => openModal(item._idx);
-                li.appendChild(span);
-                // tag 顯示
-                if (item.tags && item.tags.length > 0) {
-                    const tagWrap = document.createElement('span');
-                    tagWrap.className = 'item-tags';
-                    item.tags.forEach(tag => {
-                        const tagEl = document.createElement('span');
-                        tagEl.className = 'tag';
-                        tagEl.textContent = tag;
-                        tagWrap.appendChild(tagEl);
-                    });
-                    li.appendChild(tagWrap);
-                }
-                listEl.appendChild(li);
-            });
+    addForm.onsubmit = async e => {
+      e.preventDefault();
+      const val = itemInput.value.trim();
+      if (val) {
+        await addItem({ name: val, records: [], checked: false, tags: [] });
+        itemInput.value = '';
+      }
+    };
+
+    let editingItemId = null;
+    function openModal(id) {
+      const item = findItemById(id);
+      if (!item) return;
+      editingItemId = id;
+      editingTags = Array.isArray(item.tags) ? [...item.tags] : [];
+      renderTagOptions();
+      // 移除舊的 header row
+      let oldHeader = document.getElementById('modalHeaderRow');
+      if (oldHeader) oldHeader.remove();
+      // 建立新的 header row
+      const headerRow = document.createElement('div');
+      headerRow.className = 'modal-header-row';
+      headerRow.id = 'modalHeaderRow';
+      // 名稱 input
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.id = 'modalNameInput';
+      nameInput.value = item.name;
+      nameInput.style.fontSize = '1.1em';
+      nameInput.style.width = '100%';
+      nameInput.onblur = async function() {
+        const newName = nameInput.value.trim();
+        if (newName && newName !== item.name) {
+          await updateItem(editingItemId, { name: newName });
         }
-        addForm.onsubmit = async e => {
-            e.preventDefault();
-            const val = itemInput.value.trim();
-            if (val) {
-                const items = getItems();
-                items.push({ name: val, records: [], checked: false, tags: [] });
-                await saveItems(items);
-                itemInput.value = '';
-            }
+      };
+      nameInput.onkeydown = async function(ev) {
+        if (ev.key === 'Enter') {
+          nameInput.blur();
+        } else if (ev.key === 'Escape') {
+          nameInput.value = item.name;
+          nameInput.blur();
+        }
+      };
+      headerRow.appendChild(nameInput);
+      // 刪除按鈕
+      headerRow.appendChild(modalDeleteItem);
+      // 插入 header row
+      const modal = modalBg.querySelector('.modal');
+      modal.insertBefore(headerRow, modalForm);
+      // 其餘初始化
+      modalPrice.value = '';
+      modalQty.value = '';
+      modalPlace.value = 'Tesco';
+      renderRecords(item.records || []);
+      modalBg.classList.add('active');
+    }
+    function closeModal() {
+      modalBg.classList.remove('active');
+      editingItemId = null;
+    }
+    function renderTagOptions() {
+      modalTagGroup.innerHTML = '';
+      TAG_OPTIONS.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tag-btn' + (editingTags.includes(tag) ? ' selected' : '');
+        btn.textContent = tag;
+        btn.onclick = async function() {
+          if (editingTags.includes(tag)) {
+            editingTags = editingTags.filter(t => t !== tag);
+          } else {
+            editingTags.push(tag);
+          }
+          if (editingItemId) {
+            await updateItem(editingItemId, { tags: [...editingTags] });
+          }
+          renderTagOptions();
         };
-        function openModal(idx) {
-            const items = getItems();
-            editingIdx = idx;
-            editingTags = Array.isArray(items[idx].tags) ? [...items[idx].tags] : [];
-            renderTagOptions();
-            modalPrice.value = '';
-            modalQty.value = '';
-            modalPlace.value = 'Tesco';
-            renderRecords(items[idx].records || []);
-            modalBg.classList.add('active');
+        modalTagGroup.appendChild(btn);
+      });
+    }
+    modalBg.onclick = function(e) {
+      if (e.target === modalBg) closeModal();
+    };
+    modalForm.onsubmit = async function(e) {
+      e.preventDefault();
+      if (!editingItemId) return;
+      const item = findItemById(editingItemId);
+      if (!item) return;
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+      const newRecord = {
+        price: modalPrice.value,
+        qty: modalQty.value,
+        place: modalPlace.value,
+        date: dateStr
+      };
+      const newRecords = Array.isArray(item.records) ? [...item.records, newRecord] : [newRecord];
+      await updateItem(editingItemId, { records: newRecords });
+      renderRecords(newRecords);
+      modalPrice.value = '';
+      modalQty.value = '';
+      modalPlace.value = 'Tesco';
+    };
+    modalDeleteItem.onclick = async function() {
+      if (!editingItemId) return;
+      if (confirm('確定要刪除此項目嗎？此動作無法復原。')) {
+        await deleteItem(editingItemId);
+        closeModal();
+      }
+    };
+    function renderRecords(records) {
+      recordList.innerHTML = '<h3>歷史記錄</h3>';
+      if (!records || records.length === 0) {
+        const div = document.createElement('div');
+        div.style.color = '#888';
+        div.style.textAlign = 'center';
+        div.textContent = '尚無記錄';
+        recordList.appendChild(div);
+        return;
+      }
+      records.forEach((rec, i) => {
+        const recDiv = document.createElement('div');
+        recDiv.className = 'record-item';
+        const info = document.createElement('div');
+        info.className = 'record-info';
+        let unitPrice = '-';
+        if (rec.price && rec.qty && !isNaN(rec.price) && !isNaN(rec.qty) && Number(rec.qty) !== 0) {
+          unitPrice = (Number(rec.price) / Number(rec.qty)).toFixed(3);
         }
-        function closeModal() {
-            modalBg.classList.remove('active');
-            editingIdx = null;
-        }
-        function renderTagOptions() {
-            modalTagGroup.innerHTML = '';
-            TAG_OPTIONS.forEach(tag => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'tag-btn' + (editingTags.includes(tag) ? ' selected' : '');
-                btn.textContent = tag;
-                btn.onclick = async function() {
-                    if (editingTags.includes(tag)) {
-                        editingTags = editingTags.filter(t => t !== tag);
-                    } else {
-                        editingTags.push(tag);
-                    }
-                    if (editingIdx !== null) {
-                        const items = getItems();
-                        items[editingIdx].tags = [...editingTags];
-                        await saveItems(items);
-                    }
-                    renderTagOptions();
-                };
-                modalTagGroup.appendChild(btn);
-            });
-        }
-        modalBg.onclick = function(e) {
-            if (e.target === modalBg) closeModal();
+        info.textContent = `£ ${rec.price || '-'} for ${rec.qty || '-'} (${unitPrice}) ||  ${rec.place || '-'} ||  ${rec.date || '-'}`;
+        const delBtn = document.createElement('button');
+        delBtn.className = 'record-x';
+        delBtn.textContent = '✕';
+        delBtn.title = '刪除';
+        delBtn.onclick = async () => {
+          const item = findItemById(editingItemId);
+          if (!item) return;
+          const newRecords = [...item.records];
+          newRecords.splice(i, 1);
+          await updateItem(editingItemId, { records: newRecords });
+          renderRecords(newRecords);
         };
-        modalForm.onsubmit = async function(e) {
-            e.preventDefault();
-            if (editingIdx === null) return;
-            const items = getItems();
-            const item = items[editingIdx];
-            if (!item.records) item.records = [];
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const dateStr = `${yyyy}-${mm}-${dd}`;
-            item.records.push({
-                price: modalPrice.value,
-                qty: modalQty.value,
-                place: modalPlace.value,
-                date: dateStr
-            });
-            await saveItems(items);
-            renderRecords(item.records);
-            modalPrice.value = '';
-            modalQty.value = '';
-            modalPlace.value = 'Tesco';
-        };
-        modalDeleteItem.onclick = async function() {
-            if (editingIdx === null) return;
-            const items = getItems();
-            if (confirm('確定要刪除此項目嗎？此動作無法復原。')) {
-                items.splice(editingIdx, 1);
-                await saveItems(items);
-                closeModal();
-            }
-        };
-        function renderRecords(records) {
-            recordList.innerHTML = '<h3>歷史記錄</h3>';
-            if (!records || records.length === 0) {
-                const div = document.createElement('div');
-                div.style.color = '#888';
-                div.style.textAlign = 'center';
-                div.textContent = '尚無記錄';
-                recordList.appendChild(div);
-                return;
-            }
-            records.forEach((rec, i) => {
-                const recDiv = document.createElement('div');
-                recDiv.className = 'record-item';
-                const info = document.createElement('div');
-                info.className = 'record-info';
-                let unitPrice = '-';
-                if (rec.price && rec.qty && !isNaN(rec.price) && !isNaN(rec.qty) && Number(rec.qty) !== 0) {
-                    unitPrice = (Number(rec.price) / Number(rec.qty)).toFixed(3);
-                }
-                info.textContent = `£ ${rec.price || '-'} for ${rec.qty || '-'} (${unitPrice}) ||  ${rec.place || '-'} ||  ${rec.date || '-'}`;
-                const delBtn = document.createElement('button');
-                delBtn.className = 'record-x';
-                delBtn.textContent = '✕';
-                delBtn.title = '刪除';
-                delBtn.onclick = async () => {
-                    const items = getItems();
-                    items[editingIdx].records.splice(i, 1);
-                    await saveItems(items);
-                    renderRecords(items[editingIdx].records);
-                };
-                recDiv.appendChild(info);
-                recDiv.appendChild(delBtn);
-                recordList.appendChild(recDiv);
-            });
+        recDiv.appendChild(info);
+        recDiv.appendChild(delBtn);
+        recordList.appendChild(recDiv);
+      });
+    }
+    // 設定 modal
+    settingsBtn.onclick = function() {
+      settingsModalBg.style.display = 'flex';
+    };
+    closeSettingsBtn.onclick = function() {
+      settingsModalBg.style.display = 'none';
+    };
+    settingsModalBg.onclick = function(e) {
+      if (e.target === settingsModalBg) settingsModalBg.style.display = 'none';
+    };
+    clearDataBtn.onclick = async function() {
+      if (confirm('確定要清除所有資料嗎？此動作無法復原。')) {
+        await clearAll();
+        settingsModalBg.style.display = 'none';
+      }
+    };
+    // Firestore 即時監聽
+    onSnapshot(colRef, (snapshot) => {
+      itemsCache = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      console.log('Fetched items:', itemsCache); // Debugging line to check fetched data
+      render();
+      // 若 modal 開啟，需即時更新 tag/記錄
+      if (editingItemId) {
+        const item = findItemById(editingItemId);
+        if (item) {
+          editingTags = Array.isArray(item.tags) ? [...item.tags] : [];
+          renderTagOptions();
+          renderRecords(item.records || []);
         }
-        render();
+      }
+    });
     </script>
 </body>
 </html> 
