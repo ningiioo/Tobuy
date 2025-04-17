@@ -211,7 +211,13 @@
     let editingTags = [];
     let itemsCache = [];
 
-    const TAG_OPTIONS = ['中超', '西超', '急', '唔急', '食物', '生活用品'];
+    const TAG_OPTIONS = ['中超', '急', '食物', '生活用品'];
+    const TAG_COLORS = {
+      '中超': { bg: '#ffe0ef', color: '#d16ba5', border: '#f8bbd0' },
+      '急': { bg: '#fff3cd', color: '#d39e00', border: '#ffe082' },
+      '食物': { bg: '#e0f7fa', color: '#00838f', border: '#4dd0e1' },
+      '生活用品': { bg: '#e8f5e9', color: '#388e3c', border: '#a5d6a7' }
+    };
 
     function findItemById(id) {
       return itemsCache.find(item => item.id === id);
@@ -219,8 +225,19 @@
 
     function render() {
       let items = itemsCache.slice();
-      // 排序：未勾選在前，已勾選在後
-      items.sort((a, b) => (a.checked === b.checked) ? a.createdAt - b.createdAt : (a.checked ? 1 : -1));
+      // 排序：未勾選 > tag含「急」 > 其他
+      items.sort((a, b) => {
+        // 未勾選優先
+        if (!!a.checked !== !!b.checked) return a.checked ? 1 : -1;
+        // 都未勾選時，tag含「急」優先
+        const aUrgent = Array.isArray(a.tags) && a.tags.includes('急');
+        const bUrgent = Array.isArray(b.tags) && b.tags.includes('急');
+        if (a.checked === false && b.checked === false) {
+          if (aUrgent !== bUrgent) return bUrgent ? 1 : -1;
+        }
+        // 其他照建立時間
+        return a.createdAt - b.createdAt;
+      });
       listEl.innerHTML = '';
       if (items.length === 0) {
         const li = document.createElement('li');
@@ -280,6 +297,11 @@
           item.tags.forEach(tag => {
             const tagEl = document.createElement('span');
             tagEl.className = 'tag';
+            // 動態設置顏色
+            const color = TAG_COLORS[tag] || { bg: '#ffe0ef', color: '#d16ba5', border: '#f8bbd0' };
+            tagEl.style.background = color.bg;
+            tagEl.style.color = color.color;
+            tagEl.style.border = `1px solid ${color.border}`;
             tagEl.textContent = tag;
             tagWrap.appendChild(tagEl);
           });
@@ -358,6 +380,11 @@
         btn.type = 'button';
         btn.className = 'tag-btn' + (editingTags.includes(tag) ? ' selected' : '');
         btn.textContent = tag;
+        // 動態設置顏色
+        const color = TAG_COLORS[tag] || { bg: '#ffe0ef', color: '#d16ba5', border: '#f8bbd0' };
+        btn.style.background = color.bg;
+        btn.style.color = color.color;
+        btn.style.border = `1.5px solid ${color.border}`;
         btn.onclick = async function() {
           if (editingTags.includes(tag)) {
             editingTags = editingTags.filter(t => t !== tag);
