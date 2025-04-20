@@ -5,63 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Buy List</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff0f6; margin: 0; padding: 0; }
-        .container { max-width: 480px; margin: 40px auto; background: #fff6fa; padding: 2rem 1.5rem; border-radius: 18px; box-shadow: 0 2px 16px rgba(255, 182, 193, 0.13); border: 2px solid #ffe0ef; }
-        h1 { text-align: center; font-weight: 700; margin-bottom: 1.5rem; letter-spacing: 1px; font-size: 2rem; color: #d16ba5; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #e3f2fd; margin: 0; padding: 0; }
+        .container { max-width: 480px; margin: 40px auto; background: #f5faff; padding: 2rem 1.5rem; border-radius: 18px; box-shadow: 0 2px 16px rgba(33, 150, 243, 0.10); border: 2px solid #bbdefb; }
+        h1 { text-align: center; font-weight: 700; margin-bottom: 1.5rem; letter-spacing: 1px; font-size: 2rem; color: #1976d2; }
         ul { list-style: none; padding: 0; margin: 0; }
-        li { display: flex; align-items: center; padding: 1rem 0; border-bottom: 1px solid #ffe0ef; font-size: 1.15em; }
+        li { display: flex; align-items: center; padding: 1rem 0; border-bottom: 1px solid #bbdefb; font-size: 1.15em; }
         li:last-child { border-bottom: none; }
-        .item-checkbox { margin-right: 1em; width: 1.3em; height: 1.3em; accent-color: #f48fb1; }
-        .item-name { flex: 1; cursor: pointer; transition: color 0.2s; font-size: 1.1em; color: #a259c6; }
-        .item-name:hover { color: #f48fb1; text-decoration: underline; }
-        .item-checked { color: #e0bfe6 !important; text-decoration: line-through; }
+        .item-checkbox { margin-right: 1em; width: 1.3em; height: 1.3em; accent-color: #1976d2; }
+        .item-name { flex: 1; cursor: pointer; transition: color 0.2s; font-size: 1.1em; color: #1976d2; }
+        .item-name:hover { color: #2196f3; text-decoration: underline; }
+        .item-checked { color: #90caf9 !important; text-decoration: line-through; }
         .item-tags { margin-left: 0.5em; display: flex; flex-wrap: wrap; gap: 0.3em; }
-        .tag { background: #ffe0ef; color: #d16ba5; border-radius: 16px; font-size: 0.95em; padding: 0.18em 1em; margin: 0 0.1em; border: 1px solid #f8bbd0; }
+        .tag { background: #e3f2fd; color: #1976d2; border-radius: 16px; font-size: 0.95em; padding: 0.18em 1em; margin: 0 0.1em; border: 1px solid #90caf9; }
         .tag-btn {
-            border: none; outline: none; background: #ffe0ef; color: #d16ba5; border-radius: 16px; font-size: 1em; padding: 0.3em 1.1em; margin: 0.15em 0.3em 0.15em 0; cursor: pointer; transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-            border: 1.5px solid #f8bbd0;
-            box-shadow: 0 1px 4px #f8bbd055;
+            border: none; outline: none; background: #e3f2fd; color: #1976d2; border-radius: 16px; font-size: 1em; padding: 0.3em 1.1em; margin: 0.15em 0.3em 0.15em 0; cursor: pointer; transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+            border: 1.5px solid #90caf9;
+            box-shadow: 0 1px 4px #90caf955;
         }
-        .tag-btn.selected, .tag-btn:active { background: #f48fb1; color: #fff; border-color: #f48fb1; box-shadow: 0 2px 8px #f8bbd099; }
-        .tag-btn:hover { background: #f8bbd0; color: #a259c6; }
+        .tag-btn.selected, .tag-btn:active { background: #1976d2; color: #fff; border-color: #1976d2; box-shadow: 0 2px 8px #90caf999; }
+        .tag-btn:hover { background: #90caf9; color: #1976d2; }
         form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-        input[type="text"] { flex: 1; padding: 0.7rem; border: 1.5px solid #f8bbd0; border-radius: 8px; font-size: 1.1rem; background: #fffafd; color: #a259c6; }
-        input[type="text"]:focus { outline: 2px solid #f48fb1; }
-        button { padding: 0.5rem 1.2rem; border: none; border-radius: 8px; background: linear-gradient(90deg, #f48fb1 60%, #a7c7e7 100%); color: #fff; cursor: pointer; font-size: 1rem; font-weight: 600; box-shadow: 0 2px 8px #f8bbd055; transition: background 0.2s, box-shadow 0.2s; }
-        button:hover { background: linear-gradient(90deg, #f8bbd0 60%, #b2e0f7 100%); color: #d16ba5; box-shadow: 0 4px 16px #f8bbd099; }
-        button.delete { background: #f48fb1; font-size: 1rem; padding: 0.4rem 0.8rem; border-radius: 8px; }
-        button.delete:hover { background: #d16ba5; color: #fff; }
+        input[type="text"] { flex: 1; padding: 0.7rem; border: 1.5px solid #90caf9; border-radius: 8px; font-size: 1.1rem; background: #fff; color: #1976d2; }
+        input[type="text"]:focus { outline: 2px solid #1976d2; }
+        button { padding: 0.5rem 1.2rem; border: none; border-radius: 8px; background: linear-gradient(90deg, #1976d2 60%, #90caf9 100%); color: #fff; cursor: pointer; font-size: 1rem; font-weight: 600; box-shadow: 0 2px 8px #90caf955; transition: background 0.2s, box-shadow 0.2s; }
+        button:hover { background: linear-gradient(90deg, #2196f3 60%, #bbdefb 100%); color: #1976d2; box-shadow: 0 4px 16px #90caf999; }
+        button.delete { background: #1976d2; font-size: 1rem; padding: 0.4rem 0.8rem; border-radius: 8px; }
+        button.delete:hover { background: #1565c0; color: #fff; }
         /* Modal styles */
         .modal-bg {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(244, 143, 177, 0.13); z-index: 1000; justify-content: center; align-items: center;
+            background: rgba(33, 150, 243, 0.10); z-index: 1000; justify-content: center; align-items: center;
         }
         .modal-bg.active { display: flex; }
         .modal {
-            background: #fffafd; padding: 2rem 1.5rem; border-radius: 18px; box-shadow: 0 2px 24px #f8bbd099; min-width: 320px; max-width: 95vw; position: relative; border: 2px solid #ffe0ef;
+            background: #fff; padding: 2rem 1.5rem; border-radius: 18px; box-shadow: 0 2px 24px #90caf999; min-width: 320px; max-width: 95vw; position: relative; border: 2px solid #bbdefb;
         }
-        .modal label { display: block; margin-top: 1rem; font-size: 1.1rem; color: #a259c6; }
-        .modal input, .modal select { border-radius: 8px; border: 1.5px solid #f8bbd0; font-size: 1.1em; box-sizing: border-box; padding: 0.7em; background: #fff0f6; color: #a259c6; }
-        .modal input:focus, .modal select:focus { outline: 2px solid #f48fb1; }
+        .modal label { display: block; margin-top: 1rem; font-size: 1.1rem; color: #1976d2; }
+        .modal input, .modal select { border-radius: 8px; border: 1.5px solid #90caf9; font-size: 1.1em; box-sizing: border-box; padding: 0.7em; background: #e3f2fd; color: #1976d2; outline: none; transition: border 0.2s, box-shadow 0.2s; }
+        .modal input:focus, .modal select:focus { outline: 2px solid #1976d2; border-color: #1976d2; }
         .modal .actions { margin-top: 0; text-align: right; }
         .modal .actions button { margin-left: 0.5rem; }
         .modal .danger-x {
-            position: absolute; left: 1rem; top: 1rem; background: #f48fb1; color: #fff; border: none; border-radius: 50%; width: 1.7em; height: 1.7em; font-size: 1.1em; font-weight: bold; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 0; transition: background 0.2s;
-            box-shadow: 0 2px 8px #f8bbd055;
+            position: absolute; left: 1rem; top: 1rem; background: #1976d2; color: #fff; border: none; border-radius: 50%; width: 1.7em; height: 1.7em; font-size: 1.1em; font-weight: bold; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 0; transition: background 0.2s;
+            box-shadow: 0 2px 8px #90caf955;
         }
-        .modal .danger-x:hover { background: #d16ba5; }
+        .modal .danger-x:hover { background: #1565c0; }
         .modal .tag-group { display: flex; flex-wrap: wrap; gap: 0.7em; margin-top: 0.7em; margin-bottom: 0.5em; }
         .modal .row-form { display: flex; gap: 0.7em; align-items: center; margin-top: 1.2em; }
         .modal .row-form input[type="number"], .modal .row-form select { width: 6em; min-width: 0; font-size: 1.1em; }
-        .modal .row-form button { white-space: nowrap; font-size: 1em; padding: 0.5rem 1.2rem; border-radius: 8px; background: linear-gradient(90deg, #f48fb1 60%, #a7c7e7 100%); color: #fff; font-weight: 600; box-shadow: 0 2px 8px #f8bbd055; }
-        .modal .row-form button:hover { background: linear-gradient(90deg, #f8bbd0 60%, #b2e0f7 100%); color: #d16ba5; }
+        .modal .row-form button { white-space: nowrap; font-size: 1em; padding: 0.5rem 1.2rem; border-radius: 8px; background: linear-gradient(90deg, #1976d2 60%, #90caf9 100%); color: #fff; font-weight: 600; box-shadow: 0 2px 8px #90caf955; }
+        .modal .row-form button:hover { background: linear-gradient(90deg, #2196f3 60%, #bbdefb 100%); color: #1976d2; }
         .modal .spacer { height: 1em; }
         .record-list { margin-top: 1.5rem; }
         .record-list h3 { display: none; }
         .record-item { border: none; background: none; border-radius: 0; padding: 0.3rem 0 0.3rem 0; margin-bottom: 0.2rem; display: flex; align-items: center; font-size: 1em; }
-        .record-info { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1em; color: #a259c6; }
-        .record-x { background: none; border: none; color: #f48fb1; font-size: 1.1em; font-weight: bold; margin-left: 0.7rem; cursor: pointer; line-height: 1; padding: 0 0.4rem; transition: color 0.2s; }
-        .record-x:hover { color: #d16ba5; }
+        .record-info { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1em; color: #1976d2; }
+        .record-x { background: none; border: none; color: #1976d2; font-size: 1.1em; font-weight: bold; margin-left: 0.7rem; cursor: pointer; line-height: 1; padding: 0 0.4rem; transition: color 0.2s; }
+        .record-x:hover { color: #1565c0; }
         .modal .modal-header-row {
             display: flex;
             align-items: center;
@@ -91,17 +91,47 @@
             .tag-btn { font-size: 1em; padding: 0.3em 1em; }
             .modal .modal-header-row { gap: 0.3em; }
         }
+        #tabBar button.selected { background: #1976d2; color: #fff; }
+        #tabBar { box-shadow: 0 -2px 16px #90caf933; background: #f5faff; border-top:2px solid #bbdefb; }
+        @media (max-width:600px) { #tabBar { height:48px; } #tabBar button { font-size:1em; } }
+        button[type="submit"] {
+            background: #fff !important;
+            color: #1976d2 !important;
+            border: 1px solid #1976d2 !important;
+        }
+        button[type="submit"]:hover {
+            background: #1976d2 !important;
+            color: #fff !important;
+        }
+        /* 統一 select 樣式 */
+        select, .modal select {
+            border-radius: 8px;
+            border: 1.5px solid #90caf9;
+            font-size: 1em;
+            box-sizing: border-box;
+            padding: 0.3em;
+            background: #e3f2fd;
+            color: #1976d2;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
     </style>
 </head>
 <body>
     <div class="container" style="position:relative;">
         <button id="settingsBtn" style="background: none; border: none; box-shadow: none; padding: 0.3em 0.3em 0.1em 0.3em; margin: 0; cursor: pointer; position: absolute; right: 0.2em; top: 0.2em; z-index: 10;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d16ba5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="3.5"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 8.6 15a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 15 8.6c.26.09.52.09.78 0a1.65 1.65 0 0 0 1.82.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 15z"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="3.5"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 8.6 15a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 15 8.6c.26.09.52.09.78 0a1.65 1.65 0 0 0 1.82.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 15z"/></svg>
         </button>
         <h1 style="text-align:center; margin:0 0 1.5rem 0;">To Buy List</h1>
+        <!-- 搜尋框 -->
+        <div style="margin-bottom:1rem; display:flex; align-items:center; gap:0.5em;">
+          <input id="buySearchInput" type="text" placeholder="搜尋項目或標籤..." style="flex:1; padding:0.8em 1em; font-size:0.9em;" autocomplete="off">
+          <button id="buySearchClear" style="background:none; color:#1976d2; border:none; font-size:1em;">✕</button>
+        </div>
         <form id="addForm">
-            <input type="text" id="itemInput" placeholder="新增待買項目..." required autocomplete="off">
-            <button type="submit">新增</button>
+            <input type="text" id="itemInput" placeholder="新增待買項目..." style="flex:1; padding:0.8em 1em; font-size:0.9em;" required autocomplete="off">
+            <button type="submit" style="font-size:0.9em; border:none; padding:0.5em 0.7em;">新增</button>
         </form>
         <ul id="list"></ul>
     </div>
@@ -145,11 +175,31 @@
     <!-- 設定 Modal -->
     <div class="modal-bg" id="settingsModalBg" style="display:none;">
         <div class="modal" style="max-width:340px; text-align:center;">
-            <h2 style="color:#d16ba5; font-size:1.3em; margin-bottom:1.5em;">設定</h2>
-            <button id="clearDataBtn" style="background:#f48fb1; color:#fff; border:none; border-radius:8px; font-size:1.1em; font-weight:600; padding:0.7em 2em; margin-bottom:1.5em; box-shadow:0 2px 8px #f8bbd055; cursor:pointer;">清除所有資料</button>
+            <h2 style="color:#1976d2; font-size:1.3em; margin-bottom:1.5em;">設定</h2>
+            <button id="clearDataBtn" style="background:#1976d2; color:#fff; border:none; border-radius:8px; font-size:1.1em; font-weight:600; padding:0.7em 2em; margin-bottom:1.5em; box-shadow:0 2px 8px #f8bbd055; cursor:pointer;">清除所有資料</button>
             <br>
-            <button id="closeSettingsBtn" style="background:#ffe0ef; color:#d16ba5; border:none; border-radius:8px; font-size:1em; font-weight:600; padding:0.5em 1.5em; margin-top:0.5em; cursor:pointer;">關閉</button>
+            <button id="closeSettingsBtn" style="background:#ffffff; color:#1976d2; border:none; border-radius:8px; font-size:1em; font-weight:600; padding:0.5em 1.5em; margin-top:0.5em; cursor:pointer;">關閉</button>
         </div>
+    </div>
+    <!-- 新增：To Do List 分頁容器 -->
+    <div class="container" id="todoContainer" style="display:none; position:relative;">
+        <h1 style="text-align:center; margin:0 0 1.5rem 0;">To Do List</h1>
+        <div id="todoTopInfo" style="text-align:center; color:#1976d2; font-size:1.1em; margin-bottom:1em;"></div>
+        <form id="todoAddForm" style="display:flex; gap:0.5rem; margin-bottom:1.5rem;">
+            <input type="text" id="todoInput" placeholder="新增待辦事項..." required autocomplete="off">
+            <select id="todoImportant"><option value="1">重要</option><option value="0">不重要</option></select>
+            <select id="todoUrgent"><option value="1">緊急</option><option value="0">不緊急</option></select>
+            <button type="submit">新增</button>
+        </form>
+        <ul id="todoList"></ul>
+        <div style="margin-top:1.5em; text-align:center;">
+            <button id="showCompletedBtn" style="background:#ffffff; color:#1976d2; border:none; border-radius:8px; font-size:0.9em; font-weight:600; padding:0.8em 1.5em; cursor:pointer;">查看已完成項目</button>
+        </div>
+    </div>
+    <!-- 底部固定分頁切換欄 -->
+    <div id="tabBar" style="position:fixed; left:0; right:0; bottom:0; height:50px; background:#ffffff; border-top:2px solid #9fc7ef; display:flex; z-index:1001;">
+        <button id="tabMain" style="flex:1; border:none; background:none; font-size:1.1em; color:#1976d2; font-weight:600; cursor:pointer;">To Buy</button>
+        <button id="tabTodo" style="flex:1; border:none; background:none; font-size:1.1em; color:#1976d2; font-weight:600; cursor:pointer;">To Do</button>
     </div>
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
@@ -191,6 +241,184 @@
       }
     }
 
+    // ========== To Do List Firestore 操作 ==========
+    const todoColRef = collection(db, "todoList");
+    async function getTodos() {
+      const q = query(todoColRef, orderBy('createdAt'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+    }
+    async function addTodo(todo) {
+      todo.createdAt = Date.now();
+      await addDoc(todoColRef, todo);
+    }
+    async function updateTodo(id, data) {
+      await updateDoc(doc(todoColRef, id), data);
+    }
+    async function deleteTodo(id) {
+      await deleteDoc(doc(todoColRef, id));
+    }
+
+    // ========== 分頁切換邏輯 ==========
+    const mainContainer = document.querySelector('.container');
+    const todoContainer = document.getElementById('todoContainer');
+    const tabMain = document.getElementById('tabMain');
+    const tabTodo = document.getElementById('tabTodo');
+    function switchTab(tab) {
+      if(tab === 'main') {
+        mainContainer.style.display = '';
+        todoContainer.style.display = 'none';
+        tabMain.classList.add('selected');
+        tabTodo.classList.remove('selected');
+      } else {
+        mainContainer.style.display = 'none';
+        todoContainer.style.display = '';
+        tabMain.classList.remove('selected');
+        tabTodo.classList.add('selected');
+      }
+    }
+    tabMain.onclick = () => switchTab('main');
+    tabTodo.onclick = () => switchTab('todo');
+    switchTab('main'); // 預設主清單
+
+    // ========== To Do List UI 與邏輯 ==========
+    const todoListEl = document.getElementById('todoList');
+    const todoAddForm = document.getElementById('todoAddForm');
+    const todoInput = document.getElementById('todoInput');
+    const todoImportant = document.getElementById('todoImportant');
+    const todoUrgent = document.getElementById('todoUrgent');
+    const todoTopInfo = document.getElementById('todoTopInfo');
+    const showCompletedBtn = document.getElementById('showCompletedBtn');
+    let todoCache = [];
+    let showCompleted = false;
+    function renderTodos() {
+      let todos = todoCache.slice();
+      // 依重要/緊急分類排序
+      todos = todos.filter(t => showCompleted ? t.checked : !t.checked);
+      todos.sort((a, b) => {
+        // 重要+緊急 > 重要+不緊急 > 不重要+緊急 > 不重要+不緊急
+        const aScore = (a.important ? 2 : 0) + (a.urgent ? 1 : 0);
+        const bScore = (b.important ? 2 : 0) + (b.urgent ? 1 : 0);
+        if (aScore !== bScore) return bScore - aScore;
+        return a.createdAt - b.createdAt;
+      });
+      todoListEl.innerHTML = '';
+      if (todos.length === 0) {
+        const li = document.createElement('li');
+        li.style.textAlign = 'center';
+        li.style.color = '#888';
+        li.textContent = showCompleted ? '沒有已完成項目' : '沒有待辦事項';
+        todoListEl.appendChild(li);
+        return;
+      }
+      todos.forEach(todo => {
+        const li = document.createElement('li');
+        // 勾選框
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'item-checkbox';
+        checkbox.checked = !!todo.checked;
+        checkbox.onchange = async () => {
+          await updateTodo(todo.id, { checked: checkbox.checked });
+        };
+        li.appendChild(checkbox);
+        // 標題（可編輯）
+        const span = document.createElement('span');
+        span.className = 'item-name' + (todo.checked ? ' item-checked' : '');
+        span.textContent = todo.title;
+        span.ondblclick = function(e) {
+          e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = todo.title;
+          input.style.fontSize = '1.1em';
+          input.style.color = '#1976d2';
+          input.style.width = '80%';
+          input.onblur = async function() {
+            const newTitle = input.value.trim();
+            if (newTitle && newTitle !== todo.title) {
+              await updateTodo(todo.id, { title: newTitle });
+            }
+            renderTodos();
+          };
+          input.onkeydown = async function(ev) {
+            if (ev.key === 'Enter') {
+              input.blur();
+            } else if (ev.key === 'Escape') {
+              renderTodos();
+            }
+          };
+          li.replaceChild(input, span);
+          input.focus();
+        };
+        li.appendChild(span);
+        // 重要/緊急標籤
+        const tagWrap = document.createElement('span');
+        tagWrap.className = 'item-tags';
+        if (todo.important) {
+          const tag = document.createElement('span');
+          tag.className = 'tag';
+          tag.style.background = '#e0f7fa'; tag.style.color = '#00838f'; tag.style.border = '1px solid #4dd0e1';
+          tag.textContent = '重要';
+          tagWrap.appendChild(tag);
+        }
+        if (todo.urgent) {
+          const tag = document.createElement('span');
+          tag.className = 'tag';
+          tag.style.background = '#fff3cd'; tag.style.color = '#d39e00'; tag.style.border = '1px solid #ffe082';
+          tag.textContent = '緊急';
+          tagWrap.appendChild(tag);
+        }
+        li.appendChild(tagWrap);
+        // 刪除按鈕只在已完成模式顯示
+        if (showCompleted) {
+          const delBtn = document.createElement('button');
+          delBtn.className = 'delete';
+          delBtn.textContent = '✕';
+          delBtn.title = '刪除';
+          delBtn.style.marginLeft = '0.7em';
+          delBtn.style.background = '#fff';
+          delBtn.style.color = '#1976d2';
+          delBtn.style.border = '1px solid #1976d2';
+          delBtn.style.fontSize = '1.1em';
+          delBtn.style.fontWeight = 'bold';
+          delBtn.style.cursor = 'pointer';
+          delBtn.style.borderRadius = '8px';
+          delBtn.style.padding = '0.3em 0.5em';
+          delBtn.onmouseover = function() { delBtn.style.background = '#1976d2'; delBtn.style.color = '#fff'; };
+          delBtn.onmouseout = function() { delBtn.style.background = '#fff'; delBtn.style.color = '#1976d2'; };
+          delBtn.onclick = async function() {
+            if (confirm('確定要刪除此待辦事項嗎？')) {
+              await deleteTodo(todo.id);
+            }
+          };
+          li.appendChild(delBtn);
+        }
+        todoListEl.appendChild(li);
+      });
+      // 未完成數
+      const uncompleted = todoCache.filter(t => !t.checked).length;
+      todoTopInfo.textContent = `未完成項目：${uncompleted} 項`;
+      showCompletedBtn.textContent = showCompleted ? '隱藏已完成項目' : '查看已完成項目';
+    }
+    todoAddForm.onsubmit = async e => {
+      e.preventDefault();
+      const val = todoInput.value.trim();
+      if (val) {
+        await addTodo({ title: val, important: todoImportant.value === '1', urgent: todoUrgent.value === '1', checked: false });
+        todoInput.value = '';
+      }
+    };
+    showCompletedBtn.onclick = () => {
+      showCompleted = !showCompleted;
+      renderTodos();
+    };
+    // Firestore 即時監聽
+    onSnapshot(todoColRef, (snapshot) => {
+      todoCache = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      renderTodos();
+    });
+
     // UI 綁定與渲染
     const listEl = document.getElementById('list');
     const addForm = document.getElementById('addForm');
@@ -223,8 +451,30 @@
       return itemsCache.find(item => item.id === id);
     }
 
+    let buySearchValue = '';
+    const buySearchInput = document.getElementById('buySearchInput');
+    const buySearchClear = document.getElementById('buySearchClear');
+    buySearchInput.addEventListener('input', e => {
+      buySearchValue = e.target.value.trim();
+      render();
+    });
+    buySearchClear.onclick = () => {
+      buySearchValue = '';
+      buySearchInput.value = '';
+      render();
+    };
+
     function render() {
       let items = itemsCache.slice();
+      // 搜尋過濾
+      if (buySearchValue) {
+        const q = buySearchValue.toLowerCase();
+        items = items.filter(item => {
+          if (item.name && item.name.toLowerCase().includes(q)) return true;
+          if (Array.isArray(item.tags) && item.tags.some(tag => tag.toLowerCase().includes(q))) return true;
+          return false;
+        });
+      }
       // 排序：未勾選 > tag含「急」 > 其他
       items.sort((a, b) => {
         // 未勾選優先
