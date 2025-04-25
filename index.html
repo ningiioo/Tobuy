@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Buy List</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #e3f2fd; margin: 0; padding: 0; }
-        .container { max-width: 480px; margin: 40px auto; background: #f5faff; padding: 2rem 1.5rem; border-radius: 18px; box-shadow: 0 2px 16px rgba(33, 150, 243, 0.10); border: 2px solid #bbdefb; }
-        h1 { text-align: center; font-weight: 700; margin-bottom: 1.5rem; letter-spacing: 1px; font-size: 2rem; color: #1976d2; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #e1f0ff; margin: 0; padding: 0; }
+        .container { max-width: 480px; margin: 20px auto; background: #e1f0ff; padding: 2rem 1.5rem; box-shadow: none; }
+        h1 { text-align: center; font-weight: 700; margin-bottom: 1.5rem; letter-spacing: 1px; font-size: 1.5rem; color: #1976d2; }
         ul { list-style: none; padding: 0; margin: 0; }
-        li { display: flex; align-items: center; padding: 1rem 0; border-bottom: 1px solid #bbdefb; font-size: 1.15em; }
+        li { display: flex; align-items: center; padding: 1rem 0; border-bottom: 1px solid #a0cef5; font-size: 1.15em; }
         li:last-child { border-bottom: none; }
         .item-checkbox { margin-right: 1em; width: 1.3em; height: 1.3em; accent-color: #1976d2; }
-        .item-name { flex: 1; cursor: pointer; transition: color 0.2s; font-size: 1.1em; color: #1976d2; }
+        .item-name { flex: 1; cursor: pointer; transition: color 0.2s; font-size: 1em; font-weight: 500; color: #1976d2; }
         .item-name:hover { color: #2196f3; text-decoration: underline; }
         .item-checked { color: #90caf9 !important; text-decoration: line-through; }
         .item-tags { margin-left: 0.5em; display: flex; flex-wrap: wrap; gap: 0.3em; }
@@ -92,7 +92,7 @@
             .modal .modal-header-row { gap: 0.3em; }
         }
         #tabBar button.selected { background: #1976d2; color: #fff; }
-        #tabBar { box-shadow: 0 -2px 16px #90caf933; background: #f5faff; border-top:2px solid #bbdefb; }
+        #tabBar { box-shadow: 0 -2px 16px #90caf933; background: #f5faff; }
         @media (max-width:600px) { #tabBar { height:48px; } #tabBar button { font-size:1em; } }
         button[type="submit"] {
             background: #fff !important;
@@ -115,7 +115,158 @@
             outline: none;
             transition: border 0.2s, box-shadow 0.2s;
         }
-
+        /* 切換分頁  */
+        .radio-input input {
+          display: none;
+        }
+        .radio-input {
+          --container_width: 100%;
+          position: relative;
+          display: flex;
+          align-items: center;
+          background-color: #ffffff;
+          color: #1976d2;
+          width: var(--container_width);
+          overflow: hidden;
+        }
+        .radio-input label {
+          width: 100%;
+          padding: 10px;
+          cursor: pointer;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1;
+          font-weight: 600;
+          letter-spacing: 2px;
+          font-size: 0.9em;
+        }
+        .selection {
+          display: none;
+          position: absolute;
+          height: 100%;
+          width: calc(var(--container_width) / 2);
+          z-index: 0;
+          left: 0;
+          top: 0;
+          transition: 0.15s ease;
+        }
+        .radio-input label:nth-child(1):has(input:checked) {
+          color: #fff;
+        }
+        .radio-input label:nth-child(2):has(input:checked) {
+          color: #ffffff;
+        }
+        .radio-input label:nth-child(1):has(input:checked) ~ .selection {
+          background-color: #1d3782;
+          display: inline-block;
+        }
+        .radio-input label:nth-child(2):has(input:checked) ~ .selection {
+          background-color: #1d3782;
+          display: inline-block;
+        }
+        .radio-input label:nth-child(1):has(input:checked) ~ .selection {
+          transform: translateX(calc(var(--container_width) * 0 / 2));
+        }
+        .radio-input label:nth-child(2):has(input:checked) ~ .selection {
+          transform: translateX(calc(var(--container_width)));
+        }
+        /* Toggle Switch for To Do List */
+        .switch-label {
+          display: flex;
+          align-items: center;
+          gap: 0.3em;
+          font-size: 1em;
+          font-weight: 600;
+          color: #1976d2;
+          cursor: pointer;
+          user-select: none;
+          position: relative;
+        }
+        .switch-label input[type="checkbox"] {
+          display: none;
+        }
+        .switch-slider {
+          width: 36px;
+          height: 20px;
+          background: #bbdefb;
+          border-radius: 12px;
+          position: relative;
+          transition: background 0.2s;
+          margin-left: 0.2em;
+          margin-right: 0.2em;
+          display: inline-block;
+        }
+        .switch-slider:before {
+          content: '';
+          position: absolute;
+          left: 3px;
+          top: 3px;
+          width: 14px;
+          height: 14px;
+          background: #fff;
+          border-radius: 50%;
+          transition: transform 0.2s;
+          box-shadow: 0 1px 4px #90caf955;
+        }
+        .switch-label input[type="checkbox"]:checked + .switch-slider {
+          background: #1976d2;
+        }
+        .switch-label input[type="checkbox"]:checked + .switch-slider:before {
+          transform: translateX(16px);
+          background: #fff;
+        }
+        /* From Uiverse.io by Madflows - 修正版，label 包住 input，移除 position:absolute */
+        .toggle-switch {
+          position: relative;
+          width: 80px;
+          height: 38px;
+          --light: #1d3782;
+          --dark: #ffffff;
+          display: flex;
+          align-items: center;
+          font-size: 0.8em;
+        }
+        .switch-label {
+          display: block;
+          width: 100%;
+          height: 32px;
+          background-color: var(--dark);
+          border-radius: 16px;
+          cursor: pointer;
+          position: relative;
+        }
+        .checkbox {
+          position: absolute;
+          opacity: 0;
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          z-index: 2;
+          cursor: pointer;
+        }
+        .slider {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 16px;
+          transition: 0.3s;
+          z-index: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #1976d2;
+          background: var(--dark);
+        }
+        .checkbox:checked + .slider {
+          background-color: var(--light);
+          color: #ffffff;
+        }
+        .switch-text {
+          transition: color 0.2s;
+          pointer-events: none;
+          user-select: none;
+        }
     </style>
 </head>
 <body>
@@ -185,11 +336,21 @@
     <div class="container" id="todoContainer" style="display:none; position:relative;">
         <h1 style="text-align:center; margin:0 0 1.5rem 0;">To Do List</h1>
         <div id="todoTopInfo" style="text-align:center; color:#1976d2; font-size:1.1em; margin-bottom:1em;"></div>
-        <form id="todoAddForm" style="display:flex; gap:0.5rem; margin-bottom:1.5rem;">
-            <input type="text" id="todoInput" placeholder="新增待辦事項..." required autocomplete="off">
-            <select id="todoImportant"><option value="1">重要</option><option value="0">不重要</option></select>
-            <select id="todoUrgent"><option value="1">緊急</option><option value="0">不緊急</option></select>
-            <button type="submit">新增</button>
+        <form id="todoAddForm" style="display:flex; gap:0.5rem; margin-bottom:1.5rem; align-items:center;">
+            <input type="text" style="font-size:0.8em" id="todoInput" placeholder="新增待辦事項..." required autocomplete="off">
+            <div class="toggle-switch">
+              <label class="switch-label">
+                <input type="checkbox" id="todoImportantSwitch" class="checkbox">
+                <span class="slider"><span class="switch-text" id="importantSwitchText">不重要</span></span>
+              </label>
+            </div>
+            <div class="toggle-switch">
+              <label class="switch-label">
+                <input type="checkbox" id="todoUrgentSwitch" class="checkbox">
+                <span class="slider"><span class="switch-text" id="urgentSwitchText">不緊急</span></span>
+              </label>
+            </div>
+            <button type="submit" style="font-size:0.8em; border:none; padding:0.5em 0.5em;">新增</button>
         </form>
         <ul id="todoList"></ul>
         <div style="margin-top:1.5em; text-align:center;">
@@ -197,9 +358,18 @@
         </div>
     </div>
     <!-- 底部固定分頁切換欄 -->
-    <div id="tabBar" style="position:fixed; left:0; right:0; bottom:0; height:50px; background:#ffffff; border-top:2px solid #9fc7ef; display:flex; z-index:1001;">
-        <button id="tabMain" style="flex:1; border:none; background:none; font-size:1.1em; color:#1976d2; font-weight:600; cursor:pointer;">To Buy</button>
-        <button id="tabTodo" style="flex:1; border:none; background:none; font-size:1.1em; color:#1976d2; font-weight:600; cursor:pointer;">To Do</button>
+    <div id="tabBar" style="position:fixed; left:0; right:0; bottom:0; height:50px; background:#ffffff; display:flex; z-index:1001; justify-content:center;">
+      <div class="radio-input">
+        <label>
+          <input type="radio" name="tab" id="tabMain" checked>
+          To Buy
+        </label>
+        <label>
+          <input type="radio" name="tab" id="tabTodo">
+          To Do
+        </label>
+        <span class="selection"></span>
+      </div>
     </div>
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
@@ -262,33 +432,31 @@
     // ========== 分頁切換邏輯 ==========
     const mainContainer = document.querySelector('.container');
     const todoContainer = document.getElementById('todoContainer');
-    const tabMain = document.getElementById('tabMain');
-    const tabTodo = document.getElementById('tabTodo');
+    const tabMainRadio = document.getElementById('tabMain');
+    const tabTodoRadio = document.getElementById('tabTodo');
     function switchTab(tab) {
       if(tab === 'main') {
         mainContainer.style.display = '';
         todoContainer.style.display = 'none';
-        tabMain.classList.add('selected');
-        tabTodo.classList.remove('selected');
       } else {
         mainContainer.style.display = 'none';
         todoContainer.style.display = '';
-        tabMain.classList.remove('selected');
-        tabTodo.classList.add('selected');
       }
     }
-    tabMain.onclick = () => switchTab('main');
-    tabTodo.onclick = () => switchTab('todo');
+    tabMainRadio.onchange = () => { if(tabMainRadio.checked) switchTab('main'); };
+    tabTodoRadio.onchange = () => { if(tabTodoRadio.checked) switchTab('todo'); };
     switchTab('main'); // 預設主清單
 
     // ========== To Do List UI 與邏輯 ==========
     const todoListEl = document.getElementById('todoList');
     const todoAddForm = document.getElementById('todoAddForm');
     const todoInput = document.getElementById('todoInput');
-    const todoImportant = document.getElementById('todoImportant');
-    const todoUrgent = document.getElementById('todoUrgent');
+    const todoImportantSwitch = document.getElementById('todoImportantSwitch');
+    const todoUrgentSwitch = document.getElementById('todoUrgentSwitch');
     const todoTopInfo = document.getElementById('todoTopInfo');
     const showCompletedBtn = document.getElementById('showCompletedBtn');
+    const importantSwitchText = document.getElementById('importantSwitchText');
+    const urgentSwitchText = document.getElementById('urgentSwitchText');
     let todoCache = [];
     let showCompleted = false;
     function renderTodos() {
@@ -398,15 +566,30 @@
       });
       // 未完成數
       const uncompleted = todoCache.filter(t => !t.checked).length;
-      todoTopInfo.textContent = `未完成項目：${uncompleted} 項`;
+      todoTopInfo.textContent = `${uncompleted} 項未完成項目`;
       showCompletedBtn.textContent = showCompleted ? '隱藏已完成項目' : '查看已完成項目';
     }
+    function updateSwitchText() {
+      importantSwitchText.textContent = todoImportantSwitch.checked ? '重要' : '不重要';
+      urgentSwitchText.textContent = todoUrgentSwitch.checked ? '緊急' : '不緊急';
+    }
+    todoImportantSwitch.addEventListener('change', updateSwitchText);
+    todoUrgentSwitch.addEventListener('change', updateSwitchText);
+    updateSwitchText();
     todoAddForm.onsubmit = async e => {
       e.preventDefault();
       const val = todoInput.value.trim();
       if (val) {
-        await addTodo({ title: val, important: todoImportant.value === '1', urgent: todoUrgent.value === '1', checked: false });
+        await addTodo({
+          title: val,
+          important: todoImportantSwitch.checked,
+          urgent: todoUrgentSwitch.checked,
+          checked: false
+        });
         todoInput.value = '';
+        todoImportantSwitch.checked = false;
+        todoUrgentSwitch.checked = false;
+        updateSwitchText();
       }
     };
     showCompletedBtn.onclick = () => {
